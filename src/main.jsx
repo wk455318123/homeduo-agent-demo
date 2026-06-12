@@ -3,7 +3,10 @@ import { createRoot } from "react-dom/client";
 import {
   ArrowLeft,
   ArrowRight,
+  BadgeCheck,
+  BedDouble,
   Building2,
+  CalendarClock,
   Calculator,
   Check,
   ChevronDown,
@@ -12,6 +15,7 @@ import {
   Clock3,
   FileCheck2,
   Home,
+  KeyRound,
   Landmark,
   LocateFixed,
   MapPin,
@@ -20,6 +24,7 @@ import {
   Mic,
   MoreHorizontal,
   Navigation,
+  PawPrint,
   Plus,
   RefreshCw,
   Search,
@@ -94,7 +99,7 @@ const communityData = [
 const prompts = [
   { id: "trend", label: "杭州最近房价什么走势？", icon: TrendingDown },
   { id: "budget", label: "300万预算，余杭和萧山怎么选？", icon: WalletCards },
-  { id: "rent", label: "未来科技城5000元内怎么租？", icon: Building2 },
+  { id: "rent", label: "我想在杭州租房，帮我找找", icon: Building2 },
   { id: "community", label: "万科城市花园最近成交怎么样？", icon: Home },
   { id: "school", label: "万科城市花园学区怎么样？", icon: CircleHelp },
 ];
@@ -102,7 +107,7 @@ const prompts = [
 const suggestions = {
   trend: ["300万预算适合看哪里？", "看看余杭和萧山对比", "我能贷多少钱？"],
   budget: ["查看余杭在售房源", "按我的收入算月供", "余杭最近房价走势"],
-  rent: ["查看可租房源", "怎么提取公积金付房租？", "可以免押吗？"],
+  rent: ["怎么提取公积金付房租？", "自如房源支持免押吗？", "想住得离公司更近"],
   community: ["查看该小区在售房源", "对比周边小区", "算一算月供"],
   school: ["查询杭州入学政策", "看看小区生活便利度", "查看周边在售房源"],
 };
@@ -114,11 +119,89 @@ const listings = {
     { title: "闲林 · 四房", meta: "118㎡ · 低密社区 · 有车位", price: "305万", tag: "空间更大" },
   ],
   rent: [
-    { title: "未来科技城 · 品牌公寓", meta: "一室一厅 · 近地铁 · 可月付", price: "4,680元/月", tag: "花呗免押" },
-    { title: "仓前 · 保租房", meta: "两室一厅 · 民水民电 · 可备案", price: "4,200元/月", tag: "公积金提取" },
-    { title: "五常 · 经纪人房源", meta: "一室一厅 · 拎包入住 · 近园区", price: "4,550元/月", tag: "随时看房" },
+    { title: "自如整租 · 西溪北苑", meta: "整租一居 · 42㎡ · 良睦路地铁站", price: "4,680元/月", tag: "花呗免押" },
+    { title: "自如整租 · 欧美金融城", meta: "整租一居 · 46㎡ · 海创园通勤约15分钟", price: "4,980元/月", tag: "今日可看" },
+    { title: "自如友家 · 仓前", meta: "品质合租 · 独立卫浴 · 可月付", price: "3,280元/月", tag: "可月付" },
   ],
 };
+
+const kaRentHomes = [
+  {
+    id: "xixi-north",
+    partner: "自如",
+    title: "自如整租 · 西溪北苑",
+    location: "未来科技城",
+    commute: "海创园通勤约 18 分钟",
+    subway: "5号线良睦路站 780m",
+    layout: "整租一居",
+    area: "42㎡",
+    price: 4680,
+    orientation: "朝南",
+    tags: ["花呗免押", "可月付", "今日可看"],
+    image: "https://images.unsplash.com/photo-1502672023488-70e25813eb80?auto=format&fit=crop&w=900&q=80",
+    reason: "通勤、预算与独居需求最均衡",
+  },
+  {
+    id: "efc",
+    partner: "自如",
+    title: "自如整租 · 欧美金融城",
+    location: "未来科技城",
+    commute: "步行至海创园约 15 分钟",
+    subway: "5号线创景路站 560m",
+    layout: "整租一居",
+    area: "46㎡",
+    price: 4980,
+    orientation: "朝南",
+    tags: ["近地铁", "智能门锁", "随时入住"],
+    image: "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=900&q=80",
+    reason: "距离公司近，下班生活更方便",
+  },
+  {
+    id: "cangqian",
+    partner: "自如",
+    title: "自如友家 · 仓前",
+    location: "仓前",
+    commute: "海创园通勤约 25 分钟",
+    subway: "5号线葛巷站 920m",
+    layout: "品质合租",
+    area: "主卧 18㎡",
+    price: 3280,
+    orientation: "带独立卫浴",
+    tags: ["可月付", "独立卫浴", "保洁服务"],
+    image: "https://images.unsplash.com/photo-1493809842364-78817add7ffb?auto=format&fit=crop&w=900&q=80",
+    reason: "预算更轻，仍能保持便利通勤",
+  },
+  {
+    id: "wuchang-two",
+    partner: "自如",
+    title: "自如整租 · 五常华元",
+    location: "西溪/五常",
+    commute: "海创园通勤约 28 分钟",
+    subway: "5号线五常站 650m",
+    layout: "整租两居",
+    area: "68㎡",
+    price: 5480,
+    orientation: "南北通透",
+    tags: ["近地铁", "双卧室", "可养猫"],
+    image: "https://images.unsplash.com/photo-1560185008-b033106af5c3?auto=format&fit=crop&w=900&q=80",
+    reason: "适合两人合租或需要独立书房",
+  },
+  {
+    id: "xianlin-two",
+    partner: "自如",
+    title: "自如整租 · 闲林山水",
+    location: "仓前",
+    commute: "海创园通勤约 35 分钟",
+    subway: "公交接驳至地铁站",
+    layout: "整租两居",
+    area: "72㎡",
+    price: 4380,
+    orientation: "带阳台",
+    tags: ["空间更大", "可月付", "民水民电"],
+    image: "https://images.unsplash.com/photo-1484154218962-a197022b5858?auto=format&fit=crop&w=900&q=80",
+    reason: "同预算获得更大的居住空间",
+  },
+];
 
 function App() {
   const [messages, setMessages] = useState([]);
@@ -375,33 +458,126 @@ function RentAnswer({ onService }) {
   return (
     <>
       <div className="answer-copy">
-        <strong>5000元以内在未来科技城有较多一居选择，向仓前或闲林移动，通常可以租到两居。</strong>
-        <p>如果你在海创园附近通勤，可以优先看未来科技城与仓前；更关注空间，可以考虑闲林。签约前建议确认备案、押付方式和民水民电。</p>
+        <strong>可以，我先了解几个关键需求，再帮你从合作平台里筛选合适房源。</strong>
+        <p>租房最影响体验的是通勤、预算和租住类型。你只需要做三步选择，我会直接给出推荐理由和可看的房源。</p>
       </div>
-      <InsightCard title="5000元预算租房地图" subtitle="整租参考 · 模拟数据">
-        <ChartHeader title="热门板块月租参考" meta="单位：元/月" />
-        <div className="chart-wrap rent-chart">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={rentData} layout="vertical" margin={{ top: 4, right: 10, left: 10, bottom: 0 }}>
-              <XAxis type="number" domain={[0, 5500]} hide />
-              <YAxis type="category" dataKey="name" axisLine={false} tickLine={false} width={76} tick={{ fill: "#596579", fontSize: 11 }} />
-              <Tooltip cursor={{ fill: "#f5f8fc" }} formatter={(value) => [`${value} 元/月`, "整租参考"]} />
-              <Bar isAnimationActive={false} dataKey="rent" fill={BLUE} radius={[0, 5, 5, 0]} barSize={14} />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-        <div className="rent-tips">
-          <span><TrainFront size={15} />海创园通勤：未来科技城 / 仓前</span>
-          <span><Home size={15} />空间优先：闲林两居选择更多</span>
-        </div>
-      </InsightCard>
+      <RentalMatchFlow onService={onService} />
       <ServiceActions title="支付宝里继续租" actions={[
-        { icon: Search, title: "查看可租房源", sub: "公寓、保租房与经纪房源", type: "rent-listings" },
+        { icon: Search, title: "查看全部 KA 房源", sub: "当前模拟接入自如房源", type: "rent-listings" },
         { icon: ShieldCheck, title: "花呗免押", sub: "减少入住资金压力", type: "deposit" },
         { icon: Landmark, title: "公积金付房租", sub: "查询可提取额度", type: "fund" },
       ]} onService={onService} />
-      <SourceNote />
+      <div className="source-note"><span>房源合作方：自如 · 当前为模拟接入效果</span><span>房源价格和可租状态以合作平台实时信息为准。</span></div>
     </>
+  );
+}
+
+function RentalMatchFlow({ onService }) {
+  const [location, setLocation] = useState("");
+  const [budget, setBudget] = useState(null);
+  const [layout, setLayout] = useState("");
+  const step = !location ? 1 : !budget ? 2 : !layout ? 3 : 4;
+  const recommended = useMemo(() => {
+    if (step < 4) return [];
+    return [...kaRentHomes]
+      .map((home) => ({
+        ...home,
+        score:
+          (home.location === location ? 4 : 0) +
+          (home.price <= budget ? 3 : Math.max(0, 2 - Math.ceil((home.price - budget) / 500))) +
+          (home.layout === layout ? 4 : 0),
+      }))
+      .sort((a, b) => b.score - a.score || a.price - b.price)
+      .slice(0, 3);
+  }, [location, budget, layout, step]);
+
+  const reset = () => {
+    setLocation("");
+    setBudget(null);
+    setLayout("");
+  };
+
+  return (
+    <section className="rental-match">
+      <div className="rental-match-head">
+        <div>
+          <span className="ka-label"><BadgeCheck size={13} />KA 房源智能匹配</span>
+          <strong>{step < 4 ? `第 ${step} 步，共 3 步` : `已匹配 ${recommended.length} 套优先房源`}</strong>
+        </div>
+        <div className="match-progress"><i className={step >= 1 ? "active" : ""} /><i className={step >= 2 ? "active" : ""} /><i className={step >= 3 ? "active" : ""} /></div>
+      </div>
+
+      {step === 1 && (
+        <MatchQuestion icon={MapPin} title="你希望住在哪里？" hint="可以按工作地点或意向板块选择">
+          <ChoiceButton title="海创园通勤 30 分钟内" sub="优先未来科技城、仓前" onClick={() => setLocation("未来科技城")} />
+          <ChoiceButton title="未来科技城" sub="离园区更近，租金相对较高" onClick={() => setLocation("未来科技城")} />
+          <ChoiceButton title="西溪 / 五常" sub="生活配套更成熟" onClick={() => setLocation("西溪/五常")} />
+          <ChoiceButton title="仓前及周边" sub="兼顾通勤与租金" onClick={() => setLocation("仓前")} />
+        </MatchQuestion>
+      )}
+
+      {step === 2 && (
+        <MatchQuestion icon={WalletCards} title="每月租金预算是多少？" hint={`已选择：${location}`}>
+          <ChoiceButton title="3,500 元以内" sub="品质合租为主" onClick={() => setBudget(3500)} />
+          <ChoiceButton title="3,500 - 4,500 元" sub="可选整租一居或远一些的两居" onClick={() => setBudget(4500)} />
+          <ChoiceButton title="4,500 - 5,500 元" sub="未来科技城整租选择更多" onClick={() => setBudget(5500)} />
+        </MatchQuestion>
+      )}
+
+      {step === 3 && (
+        <MatchQuestion icon={BedDouble} title="你想租什么类型？" hint={`已选择：${location} · ${budget.toLocaleString()} 元以内`}>
+          <ChoiceButton title="整租一居" sub="一个人住，隐私和便利优先" onClick={() => setLayout("整租一居")} />
+          <ChoiceButton title="整租两居" sub="两人合租或需要独立书房" onClick={() => setLayout("整租两居")} />
+          <ChoiceButton title="品质合租" sub="预算更轻，优先独立卫浴" onClick={() => setLayout("品质合租")} />
+        </MatchQuestion>
+      )}
+
+      {step === 4 && (
+        <div className="rental-results">
+          <div className="need-summary">
+            <div><span>你的租房需求</span><strong>{location} · {budget.toLocaleString()} 元内 · {layout}</strong></div>
+            <button onClick={reset}>重新选择</button>
+          </div>
+          <div className="match-reason"><Sparkles size={15} /><span>综合通勤、预算和房型，为你优先推荐以下自如房源</span></div>
+          <div className="ka-home-list">
+            {recommended.map((home, index) => <KAHousingCard key={home.id} home={home} rank={index + 1} onOpen={() => onService({ type: "rent-detail", home })} />)}
+          </div>
+          <button className="match-more" onClick={() => onService("rent-listings")}>查看全部匹配房源<ArrowRight size={15} /></button>
+        </div>
+      )}
+    </section>
+  );
+}
+
+function MatchQuestion({ icon: Icon, title, hint, children }) {
+  return (
+    <div className="match-question">
+      <div className="match-question-title"><span><Icon size={17} /></span><div><strong>{title}</strong><small>{hint}</small></div></div>
+      <div className="match-choices">{children}</div>
+    </div>
+  );
+}
+
+function ChoiceButton({ title, sub, onClick }) {
+  return <button className="choice-button" onClick={onClick}><span><strong>{title}</strong><small>{sub}</small></span><ChevronRight size={16} /></button>;
+}
+
+function KAHousingCard({ home, rank, onOpen, compact = false }) {
+  return (
+    <button className={`ka-home-card ${compact ? "compact" : ""}`} onClick={onOpen}>
+      <span className="ka-home-image" style={{ backgroundImage: `url(${home.image})` }}>
+        <em>推荐 {rank}</em>
+        <b>{home.partner}</b>
+      </span>
+      <span className="ka-home-body">
+        <strong>{home.title}</strong>
+        <small>{home.layout} · {home.area} · {home.orientation}</small>
+        <span className="commute-line"><TrainFront size={12} />{home.commute}</span>
+        <span className="ka-tags">{home.tags.slice(0, compact ? 2 : 3).map((tag) => <i key={tag}>{tag}</i>)}</span>
+        {!compact && <span className="recommend-reason"><Sparkles size={11} />{home.reason}</span>}
+      </span>
+      <span className="ka-home-price"><strong>{home.price.toLocaleString()}</strong><small>元/月</small><ChevronRight size={15} /></span>
+    </button>
   );
 }
 
@@ -553,7 +729,8 @@ function Consent({ onAccept }) {
 }
 
 function ServiceDrawer({ type, onClose }) {
-  const content = type === "mortgage" ? <Mortgage /> : type === "fund" ? <Fund /> : type === "buy-listings" ? <Listings kind="buy" /> : type === "rent-listings" ? <Listings kind="rent" /> : <GenericService type={type} />;
+  const drawerType = typeof type === "string" ? type : type.type;
+  const content = drawerType === "mortgage" ? <Mortgage /> : drawerType === "fund" ? <Fund /> : drawerType === "buy-listings" ? <Listings kind="buy" /> : drawerType === "rent-listings" ? <Listings kind="rent" /> : drawerType === "rent-detail" ? <RentDetail home={type.home} /> : <GenericService type={drawerType} />;
   return (
     <div className="drawer-backdrop" onMouseDown={onClose}>
       <section className="service-drawer" onMouseDown={(event) => event.stopPropagation()}>
@@ -566,7 +743,34 @@ function ServiceDrawer({ type, onClose }) {
 }
 
 function Listings({ kind }) {
+  const [selectedRent, setSelectedRent] = useState(null);
   const items = listings[kind];
+  if (kind === "rent") {
+    if (selectedRent) {
+      return (
+        <>
+          <button className="detail-back" onClick={() => setSelectedRent(null)}><ArrowLeft size={15} />返回房源列表</button>
+          <RentDetail home={selectedRent} />
+        </>
+      );
+    }
+    return (
+      <>
+        <div className="drawer-title"><span>KA 合作房源</span><small>当前模拟接入自如 · 杭州未来科技城周边</small></div>
+        <div className="partner-banner">
+          <span className="partner-logo">自如</span>
+          <div><strong>来自合作平台的实时房源</strong><small>统一展示价格、通勤、签约与履约服务</small></div>
+          <BadgeCheck size={18} />
+        </div>
+        <div className="filter-row"><button>未来科技城<ChevronDown size={13} /></button><button>5,500元内<ChevronDown size={13} /></button><button>整租优先<ChevronDown size={13} /></button><button aria-label="筛选"><SlidersHorizontal size={15} /></button></div>
+        <div className="ka-home-list drawer-homes">
+          {kaRentHomes.map((home, index) => <KAHousingCard key={home.id} home={home} rank={index + 1} compact onOpen={() => setSelectedRent(home)} />)}
+        </div>
+        <button className="primary-wide">进入自如查看更多房源<ArrowRight size={17} /></button>
+        <p className="drawer-footnote">房源信息为 Demo 模拟数据，实际价格与可租状态以合作平台为准。</p>
+      </>
+    );
+  }
   return (
     <>
       <div className="drawer-title"><span>{kind === "buy" ? "预算内在售房源" : "未来科技城周边租房"}</span><small>聚合展示 · 模拟房源</small></div>
@@ -575,6 +779,36 @@ function Listings({ kind }) {
         {items.map((item, index) => <button className="listing-item" key={item.title}><span className={`listing-image image-${index + 1}`}><Home size={25} /></span><span className="listing-content"><strong>{item.title}</strong><small>{item.meta}</small><em>{item.tag}</em></span><b>{item.price}</b></button>)}
       </div>
       <button className="primary-wide">进入房源服务查看更多<ArrowRight size={17} /></button>
+    </>
+  );
+}
+
+function RentDetail({ home }) {
+  const [booked, setBooked] = useState(false);
+  return (
+    <>
+      <div className="rent-detail-hero" style={{ backgroundImage: `url(${home.image})` }}>
+        <span className="partner-logo">自如</span>
+        <span className="detail-status">模拟房源 · 可预约</span>
+      </div>
+      <div className="rent-detail-title">
+        <div><span>{home.title}</span><small>{home.layout} · {home.area} · {home.orientation}</small></div>
+        <strong>{home.price.toLocaleString()}<small>元/月</small></strong>
+      </div>
+      <div className="detail-tags">{home.tags.map((tag) => <span key={tag}>{tag}</span>)}</div>
+      <div className="detail-reason"><Sparkles size={17} /><div><strong>Agent 推荐理由</strong><span>{home.reason}，{home.commute}。</span></div></div>
+      <div className="detail-info">
+        <div><TrainFront size={18} /><span><strong>交通通勤</strong><small>{home.subway}<br />{home.commute}</small></span></div>
+        <div><KeyRound size={18} /><span><strong>签约入住</strong><small>线上签约 · 支持月付<br />房屋状态由合作方提供</small></span></div>
+        <div><ShieldCheck size={18} /><span><strong>支付宝服务</strong><small>可尝试花呗免押<br />支持租房账单提醒</small></span></div>
+        <div><CalendarClock size={18} /><span><strong>看房时间</strong><small>今天 18:30 后<br />明天全天可约</small></span></div>
+      </div>
+      <div className="detail-actions">
+        <button className="secondary-wide"><MessageCircleMore size={16} />咨询管家</button>
+        <button className="primary-wide" onClick={() => setBooked(true)}>{booked ? <><Check size={17} />已提交看房意向</> : <>预约看房<ArrowRight size={17} /></>}</button>
+      </div>
+      {booked && <div className="booking-success"><Check size={15} />自如管家将在 10 分钟内联系你确认时间（Demo）</div>}
+      <p className="drawer-footnote">房源信息为 Demo 模拟数据，实际价格与可租状态以合作平台为准。</p>
     </>
   );
 }
