@@ -1216,7 +1216,7 @@ function ServiceDrawer({ type, onClose, onNavigate }) {
     <div className={`drawer-backdrop ${fullPage ? "full-backdrop" : ""}`} onClick={onClose}>
       <section className={`service-drawer ${fullPage ? "full-service-page" : ""}`} onClick={(event) => event.stopPropagation()}>
         {!fullPage && <div className="drawer-handle" />}
-        <button className="drawer-close" onClick={(event) => { event.preventDefault(); event.stopPropagation(); onClose(); }}><X size={17} /><span>关闭</span></button>
+        <button className="drawer-close" aria-label="关闭" onClick={(event) => { event.preventDefault(); event.stopPropagation(); onClose(); }}><X size={17} /><span>关闭</span></button>
         {content}
       </section>
     </div>
@@ -1308,6 +1308,17 @@ function RentalMarketplace() {
     setExtraFilters((items) => removing ? items.filter((item) => item !== filter) : [...items, filter]);
     setService(removing ? `已取消筛选条件：${filter}` : `已加入筛选条件：${filter}`);
   };
+  const hasActiveFilters = partner !== "全部" || location !== "全部区域" || price !== "不限租金" || layout !== "全部户型" || extraFilters.length > 0 || query.trim();
+  const resetFilters = () => {
+    setPartner("全部");
+    setLocation("全部区域");
+    setPrice("不限租金");
+    setLayout("全部户型");
+    setExtraFilters([]);
+    setSort("智能排序");
+    setQuery("");
+    setService("");
+  };
   if (selected) return <MarketplaceRentalDetail home={selected} onBack={() => setSelected(null)} />;
 
   return (
@@ -1319,7 +1330,7 @@ function RentalMarketplace() {
       </header>
 
       <section className="marketplace-source-bar">
-        <div><strong>多平台供给</strong><span>同一套需求，浏览不同平台的房源与服务</span></div>
+        <div><strong>房源来源</strong><span>聚合多平台供给，来源清晰可见</span></div>
         <nav>{partners.map((item) => <button className={partner === item ? "active" : ""} key={item} onClick={() => setPartner(item)}>{item}{item !== "全部" && <small>{kaRentHomes.filter((home) => home.partner === item).length}</small>}</button>)}</nav>
       </section>
 
@@ -1328,14 +1339,14 @@ function RentalMarketplace() {
           <button onClick={() => cycle(location, ["全部区域", "未来科技城", "仓前", "西溪/五常"], setLocation)}><MapPin size={14} />{location}<ChevronDown size={13} /></button>
           <button onClick={() => cycle(price, ["不限租金", "4,000元内", "4,000-5,000元", "5,000元以上"], setPrice)}><WalletCards size={14} />{price}<ChevronDown size={13} /></button>
           <button onClick={() => cycle(layout, ["全部户型", "整租一居", "整租两居", "品质合租"], setLayout)}><BedDouble size={14} />{layout}<ChevronDown size={13} /></button>
-          <button className={moreOpen ? "active" : ""} onClick={() => setMoreOpen(!moreOpen)}><SlidersHorizontal size={14} />更多筛选</button>
-          <button className="clear-filters" onClick={() => { setPartner("全部"); setLocation("全部区域"); setPrice("不限租金"); setLayout("全部户型"); setExtraFilters([]); setSort("智能排序"); setQuery(""); setService(""); }}>重置</button>
+          <button className={moreOpen || extraFilters.length ? "active" : ""} onClick={() => setMoreOpen(!moreOpen)}><SlidersHorizontal size={14} />筛选{extraFilters.length > 0 && <em>{extraFilters.length}</em>}</button>
+          {hasActiveFilters && <button className="clear-filters" onClick={resetFilters}>重置</button>}
         </div>
         {moreOpen && <div className="filter-more"><span>房源类型</span>{extraOptions.map((item) => <button className={extraFilters.includes(item) ? "active" : ""} key={item} onClick={() => toggleExtraFilter(item)}>{extraFilters.includes(item) && <Check size={12} />}{item}</button>)}</div>}
       </section>
 
       <section className="marketplace-toolbar">
-        <div><strong>找到 {filtered.length} 套模拟房源</strong><span>聚合结果按来源去重后展示</span></div>
+        <div><strong>{filtered.length} 套模拟房源</strong><span>多平台聚合结果</span></div>
         <div className="marketplace-trust"><BadgeCheck size={15} />明确标注来源、核验状态与更新时间</div>
         <button onClick={() => cycle(sort, ["智能排序", "租金从低到高", "通勤优先"], setSort)}><ArrowUpDown size={14} />{sort}</button>
         <div className="view-switch"><button className={view === "list" ? "active" : ""} onClick={() => setView("list")}><List size={15} />列表</button><button className={view === "map" ? "active" : ""} onClick={() => setView("map")}><Map size={15} />地图</button></div>
@@ -1399,10 +1410,12 @@ function MarketplaceRentalDetail({ home, onBack }) {
         <aside className="marketplace-detail-aside">
           <div className="source-disclosure"><span className="partner-logo multi">{home.partner.slice(0, 2)}</span><div><strong>房源来源：{home.partner}</strong><small>支付宝聚合展示，不直接发布房源</small></div></div>
           <div className="source-rules"><span><b>房源状态</b><em>以 {home.partner} 实时返回为准</em></span><span><b>咨询服务</b><em>由对应供给方承接</em></span><span><b>风险提示</b><em>签约前核验产权、合同与费用</em></span></div>
-          <button className="secondary-wide" onClick={() => setConsulted(true)}>{consulted ? <><Check size={16} />已发起平台咨询</> : <><MessageCircleMore size={16} />咨询该平台</>}</button>
-          <button className="primary-wide" onClick={() => setBooked(true)}>{booked ? <><Check size={16} />已提交看房意向</> : <>预约看房<ArrowRight size={16} /></>}</button>
           {(consulted || booked) && <ActionFeedback text={`${home.partner}将继续确认房源实时状态和看房安排（Demo）`} />}
         </aside>
+      </div>
+      <div className="marketplace-detail-bottom-actions">
+        <button className="secondary-wide" onClick={() => setConsulted(true)}>{consulted ? <><Check size={16} />已咨询</> : <><MessageCircleMore size={16} />咨询平台</>}</button>
+        <button className="primary-wide" onClick={() => setBooked(true)}>{booked ? <><Check size={16} />已预约</> : <>预约看房<ArrowRight size={16} /></>}</button>
       </div>
     </div>
   );
