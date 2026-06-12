@@ -31,6 +31,7 @@ const MACRO_PLACES = new Set([
   "仓前",
   "闲林",
   "五常",
+  "周边",
 ]);
 
 function normalize(text = "") {
@@ -45,7 +46,7 @@ function marketSubject(text = "") {
   const normalized = normalize(text);
   const match = normalized.match(/^(.{2,22}?)(?=二手房|房价|成交价|成交|均价|租金|租售比|在售|出租)/);
   if (!match) return "";
-  return match[1].replace(/^(查一下|看看|想知道|请问|帮我看|了解一下)/, "").replace(/的$/, "");
+  return match[1].replace(/^(查一下|查看|看看|想知道|请问|帮我看|了解一下)/, "").replace(/的$/, "");
 }
 
 export function isCommunityQuery(text) {
@@ -67,13 +68,17 @@ export function isCommunityQuery(text) {
 }
 
 export function extractCommunityName(text = "") {
-  if (!isCommunityQuery(text)) return "";
   const normalized = normalize(text);
-  if (/这个小区|该小区|具体小区|某个小区/.test(normalized)) return "";
-  const subject = marketSubject(text);
-  if (subject && !MACRO_PLACES.has(subject)) return subject;
+  if (/^(?:查看|看看)?(?:这个|该|具体|某个)?小区/.test(normalized)) return "";
   const named = normalized.match(/([\u4e00-\u9fa5A-Za-z0-9]{2,18}(?:小区|花园|家园|公馆|雅苑|嘉园|名邸|山庄|华庭|悦府|壹号|城邦|海岸|苑|府))/);
   if (named?.[1]) return named[1];
+  if (/学区|学校|入学/.test(normalized)) {
+    const schoolSubject = normalized.replace(/^(查一下|查看|看看|想知道|请问|帮我看|了解一下)/, "").replace(/学区|学校|入学|怎么样|如何|好不好|情况/g, "");
+    if (schoolSubject.length >= 3 && !MACRO_PLACES.has(schoolSubject)) return schoolSubject;
+  }
+  if (!isCommunityQuery(text)) return "";
+  const subject = marketSubject(text);
+  if (subject && !MACRO_PLACES.has(subject)) return subject;
   const descriptiveSubject = normalized.replace(/怎么样|如何|好不好|情况|值得买吗|值得买|了解一下|看看/g, "");
   if (descriptiveSubject.length >= 3 && !MACRO_PLACES.has(descriptiveSubject)) return descriptiveSubject;
   return "";
@@ -82,10 +87,18 @@ export function extractCommunityName(text = "") {
 export function identifyPrompt(text) {
   const normalized = normalize(text);
 
+  if (/申请进度|审核进度|选房进度|报名进度/.test(normalized)) return "policy-progress";
+  if (/(人才房|保租房|公租房|蓝领公寓|政策住房).*(材料|资料|证明)|申请材料/.test(normalized)) return "policy-materials";
+  if (/开放.*项目|项目.*开放|正在开放|政策住房项目/.test(normalized)) return "policy-projects";
   if (/保租房|保障性租赁|人才房|人才公寓|人才专项租赁|公租房|蓝领公寓|青荷驿站|申请住房|住房保障/.test(normalized)) return "affordable";
   if (/学区|学校|入学/.test(normalized)) return "school";
+  if (/公积金/.test(normalized)) return "fund";
+  if (/月供|能贷|贷款|首付|组合贷|购房能力/.test(normalized)) return "mortgage";
+  if (/免押|花呗.*押/.test(normalized)) return "deposit";
+  if (/生活便利|生活配套|周边配套|交通.*商业/.test(normalized)) return "amenities";
+  if (/查看.*房源|找.*房源|在售房源|出租房源|周边房源|全部.*房源/.test(normalized)) return "listings";
   if (isCommunityQuery(text)) return "community";
-  if (/公积金.*(租房|房租)|免押|找.*租|想.*租|租房|合租|整租|可租房源/.test(normalized)) return "rent";
+  if (/找.*租|想.*租|租房|合租|整租|可租房源|住得离|离公司|通勤.*租/.test(normalized)) return "rent";
   if (/预算|怎么选|哪个好|对比|比较|余杭.*萧山|萧山.*余杭/.test(normalized)) return "budget";
   return "trend";
 }

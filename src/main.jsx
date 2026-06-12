@@ -131,6 +131,19 @@ const suggestions = {
   school: ["查询杭州入学政策", "看看小区生活便利度", "查看周边在售房源"],
 };
 
+const directFollowupServices = {
+  "我能贷多少钱？": "mortgage",
+  "查看余杭在售房源": "buy-listings",
+  "按我的收入算月供": "mortgage",
+  "怎么提取公积金付房租？": "fund",
+  "自如房源支持免押吗？": "deposit",
+  "查看正在开放的项目": "affordable-projects",
+  "人才房需要哪些材料？": "affordable-apply",
+  "查询我的申请进度": "affordable-progress",
+  "查询杭州入学政策": "school-policy",
+  "查看周边在售房源": "buy-listings",
+};
+
 const affordableProjects = [
   {
     name: "潮语贤庭",
@@ -308,7 +321,7 @@ function App() {
     if (!text.trim() || loading) return;
     const recognizedId = identifyPrompt(text);
     const id = recognizedId === "community" ? "community" : explicitId || recognizedId;
-    const detectedCommunity = id === "community" ? extractCommunityName(text) : "";
+    const detectedCommunity = ["community", "school", "listings", "amenities"].includes(id) ? extractCommunityName(text) : "";
     const resolvedCommunity = detectedCommunity || communityContext || "该小区";
     if (detectedCommunity) setCommunityContext(detectedCommunity);
     setMessages((prev) => [...prev, { role: "user", text }]);
@@ -326,11 +339,19 @@ function App() {
     setJourney((prev) => (prev.includes("继续办事") ? prev : [...prev, "继续办事"]));
   };
 
+  const resetConversation = () => {
+    setMessages([]);
+    setInput("");
+    setDrawer(null);
+    setJourney(["了解需求"]);
+    setCommunityContext("");
+  };
+
   return (
     <div className="app-shell">
-      <DesktopNav />
+      <DesktopNav onService={openService} onReset={resetConversation} />
       <main className="agent-column">
-        <Header />
+        <Header onService={openService} onReset={resetConversation} />
         <section className="chat-scroll" ref={scrollRef}>
           {messages.length === 0 ? (
             <Welcome onAsk={ask} onService={openService} />
@@ -351,41 +372,41 @@ function App() {
             </div>
           )}
         </section>
-        <Composer value={input} setValue={setInput} onSend={() => ask(input)} />
+        <Composer value={input} setValue={setInput} onSend={() => ask(input)} onService={openService} />
       </main>
-      <JourneyPanel journey={journey} onService={openService} />
-      <BottomNav onService={openService} />
+      <JourneyPanel journey={journey} onService={openService} onReset={resetConversation} />
+      <BottomNav onService={openService} onReset={resetConversation} />
       {!consent && <Consent onAccept={() => setConsent(true)} />}
       {drawer && <ServiceDrawer type={drawer} onClose={() => setDrawer(null)} />}
     </div>
   );
 }
 
-function DesktopNav() {
+function DesktopNav({ onService, onReset }) {
   return (
     <aside className="desktop-nav">
       <div className="brand-mark">支</div>
       <nav>
-        <button className="nav-button"><Sparkles size={20} /><span>AI</span></button>
-        <button className="nav-button active"><Home size={20} /><span>房产</span></button>
-        <button className="nav-button"><MessageCircleMore size={20} /><span>历史</span></button>
+        <button className="nav-button" onClick={() => onService("ai-info")}><Sparkles size={20} /><span>AI</span></button>
+        <button className="nav-button active" onClick={onReset}><Home size={20} /><span>房产</span></button>
+        <button className="nav-button" onClick={() => onService("history")}><MessageCircleMore size={20} /><span>历史</span></button>
       </nav>
-      <button className="avatar">吴</button>
+      <button className="avatar" onClick={() => onService("profile")}>吴</button>
     </aside>
   );
 }
 
-function Header() {
+function Header({ onService, onReset }) {
   return (
     <header className="app-header">
-      <button className="icon-button mobile-back" aria-label="返回"><ArrowLeft size={20} /></button>
+      <button className="icon-button mobile-back" aria-label="返回" onClick={onReset}><ArrowLeft size={20} /></button>
       <div className="header-title">
         <div className="agent-logo"><Home size={17} /></div>
         <div><strong>房多多 Agent</strong><span>杭州 · 模拟数据演示</span></div>
       </div>
       <div className="header-actions">
-        <button className="city-pill"><MapPin size={15} />杭州<ChevronDown size={14} /></button>
-        <button className="icon-button" aria-label="更多"><MoreHorizontal size={20} /></button>
+        <button className="city-pill" onClick={() => onService("cities")}><MapPin size={15} />杭州<ChevronDown size={14} /></button>
+        <button className="icon-button" aria-label="更多" onClick={() => onService("settings")}><MoreHorizontal size={20} /></button>
       </div>
     </header>
   );
@@ -438,29 +459,88 @@ function LoadingAnswer() {
 }
 
 function AgentAnswer({ id, query, communityName, onAsk, onService }) {
-  const content = {
-    trend: <TrendAnswer onService={onService} />,
-    budget: <BudgetAnswer onService={onService} />,
+  const unsupportedPlace = Object.entries({
+    上海: /上海|浦东|闵行/,
+    北京: /北京|朝阳|海淀/,
+    广州: /广州|天河|番禺/,
+    深圳: /深圳|南山|福田/,
+    南京: /南京/,
+    成都: /成都/,
+    苏州: /苏州/,
+    武汉: /武汉/,
+    宁波: /宁波/,
+  }).find(([, pattern]) => pattern.test(query))?.[0];
+  const content = unsupportedPlace ? <CityBoundaryAnswer city={unsupportedPlace} onService={onService} /> : {
+    trend: <TrendAnswer query={query} onService={onService} />,
+    budget: <BudgetAnswer query={query} onService={onService} />,
     rent: <RentAnswer onService={onService} />,
     community: <CommunityAnswer query={query} communityName={communityName} onService={onService} />,
     affordable: <AffordableHousingAnswer onService={onService} />,
-    school: <SchoolAnswer onService={onService} />,
+    school: <SchoolAnswer communityName={communityName} onService={onService} />,
+    mortgage: <ServiceQueryAnswer id={id} query={query} communityName={communityName} onService={onService} />,
+    fund: <ServiceQueryAnswer id={id} query={query} communityName={communityName} onService={onService} />,
+    deposit: <ServiceQueryAnswer id={id} query={query} communityName={communityName} onService={onService} />,
+    amenities: <ServiceQueryAnswer id={id} query={query} communityName={communityName} onService={onService} />,
+    listings: <ServiceQueryAnswer id={id} query={query} communityName={communityName} onService={onService} />,
+    "policy-projects": <ServiceQueryAnswer id={id} query={query} communityName={communityName} onService={onService} />,
+    "policy-materials": <ServiceQueryAnswer id={id} query={query} communityName={communityName} onService={onService} />,
+    "policy-progress": <ServiceQueryAnswer id={id} query={query} communityName={communityName} onService={onService} />,
   }[id];
+  const followups = unsupportedPlace ? [] : suggestions[id] || [];
   return (
     <div className="answer-row">
       <AgentMark />
       <div className="answer-stack">
         {content}
-        <div className="followups">
+        {followups.length > 0 && <div className="followups">
           <span>继续问</span>
-          {suggestions[id].map((question) => <button key={question} onClick={() => onAsk(question)}>{question}<ChevronRight size={14} /></button>)}
-        </div>
+          {followups.map((question) => <button key={question} onClick={() => {
+            const directService = question === "查看该小区出租房源"
+              ? communityName === "万科城市花园" ? { type: "community-rent-listings", communityName } : "rent-listings"
+              : question === "看看小区生活便利度"
+                ? { type: "amenities", communityName }
+                : directFollowupServices[question];
+            directService ? onService(directService) : onAsk(question);
+          }}>{question}<ChevronRight size={14} /></button>)}
+        </div>}
       </div>
     </div>
   );
 }
 
-function TrendAnswer({ onService }) {
+function CityBoundaryAnswer({ city, onService }) {
+  return (
+    <>
+      <div className="answer-copy boundary">
+        <div className="boundary-label"><ShieldCheck size={16} />当前 Demo 能力边界</div>
+        <strong>当前 Demo 仅配置杭州场景，暂不能准确回答{city}的房产问题。</strong>
+        <p>我不会用杭州数据替代{city}数据。正式接入对应城市的数据和服务后，可再提供趋势、房源与政策住房办理。</p>
+      </div>
+      <ServiceActions title="可以先体验杭州能力" actions={[
+        { icon: Search, title: "查看杭州房源", sub: "模拟合作房源", type: "buy-listings" },
+        { icon: ShieldCheck, title: "查看杭州政策住房", sub: "模拟结构化公告", type: "affordable-projects" },
+      ]} onService={onService} />
+    </>
+  );
+}
+
+function TrendAnswer({ query, onService }) {
+  const specificArea = ["余杭", "萧山", "滨江", "西湖", "拱墅", "上城", "钱塘", "临平", "富阳", "临安", "未来科技城", "钱江新城", "奥体", "申花", "仓前", "闲林", "五常"].find((area) => query.includes(area));
+  if (specificArea) {
+    return (
+      <>
+        <div className="answer-copy boundary">
+          <div className="boundary-label"><ShieldCheck size={16} />数据粒度说明</div>
+          <strong>当前 Demo 暂未接入{specificArea}独立趋势数据。</strong>
+          <p>不会用杭州整体趋势代替{specificArea}的区域走势。真实 MCP 接入后，应返回对应区域的价格、成交活跃度与更新时间。</p>
+        </div>
+        <ServiceActions title="可以继续" actions={[
+          { icon: Search, title: `查看${specificArea}相关房源`, sub: "进入合作平台继续筛选", type: "buy-listings" },
+          { icon: Calculator, title: "测算购房能力", sub: "月供与首付一起算", type: "mortgage" },
+        ]} onService={onService} />
+      </>
+    );
+  }
   return (
     <>
       <div className="answer-copy">
@@ -494,7 +574,23 @@ function TrendAnswer({ onService }) {
   );
 }
 
-function BudgetAnswer({ onService }) {
+function BudgetAnswer({ query, onService }) {
+  const supportedComparison = (/余杭/.test(query) && /萧山/.test(query)) || /300万预算适合看哪里/.test(query);
+  if (!supportedComparison) {
+    return (
+      <>
+        <div className="answer-copy boundary">
+          <div className="boundary-label"><ShieldCheck size={16} />对比范围说明</div>
+          <strong>当前 Demo 仅配置了余杭与萧山的预算对比数据。</strong>
+          <p>不会将余杭、萧山的结论套用到其他区域。真实接入后，应基于用户指定区域重新获取价格、面积和通勤数据。</p>
+        </div>
+        <ServiceActions title="可以继续" actions={[
+          { icon: Search, title: "查看预算内房源", sub: "按区域与总价筛选", type: "buy-listings" },
+          { icon: Calculator, title: "按收入算月供", sub: "判断舒适预算", type: "mortgage" },
+        ]} onService={onService} />
+      </>
+    );
+  }
   return (
     <>
       <div className="answer-copy">
@@ -657,7 +753,94 @@ function KAHousingCard({ home, rank, onOpen, compact = false }) {
   );
 }
 
+function ServiceQueryAnswer({ id, query, communityName, onService }) {
+  const hasCommunity = communityName && communityName !== "该小区";
+  const hasCommunityData = communityName === "万科城市花园";
+  const wantsRentListings = /租|出租/.test(query);
+  const configs = {
+    mortgage: {
+      title: "能贷多少、月供多少，需要结合房屋总价、首付比例、贷款期限和公积金情况测算。",
+      copy: "你可以先用房贷计算器判断月供压力，再授权查询公积金余额与预计可贷额度。实际贷款结果以金融机构审批为准。",
+      actions: [
+        { icon: Calculator, title: "打开房贷计算器", sub: "调整总价、首付与期限", type: "mortgage" },
+        { icon: Landmark, title: "查询公积金", sub: "了解余额与预计额度", type: "fund" },
+      ],
+    },
+    fund: {
+      title: "可以通过支付宝授权查询杭州公积金账户，并继续办理贷款测算或租房提取。",
+      copy: "租房提取额度、频次和材料要求以杭州公积金官方服务返回结果为准，Demo 不直接判断你一定可以提取。",
+      actions: [{ icon: Landmark, title: "授权查询公积金", sub: "查看余额、贷款与提取", type: "fund" }],
+    },
+    deposit: {
+      title: "部分合作平台房源可申请花呗免押，但并非所有房源都支持。",
+      copy: "是否免押取决于房源合作方、签约方式和授权评估结果，建议先筛选带有“花呗免押”标识的房源。",
+      actions: [
+        { icon: ShieldCheck, title: "了解免押服务", sub: "查看授权评估流程", type: "deposit" },
+        { icon: Building2, title: "查看支持免押的房源", sub: "当前模拟接入自如", type: "rent-listings" },
+      ],
+    },
+    amenities: {
+      title: hasCommunity ? `可以继续查看${communityName}周边的交通、商业、医疗与生活服务。` : "请先告诉我具体小区，我再帮你查看周边生活便利度。",
+      copy: hasCommunity ? "便利度信息适合作为居住参考，不代表学区、入学资格或房产价值判断。" : "目前没有明确的小区上下文，不会用其他小区的信息替代。",
+      actions: hasCommunity ? [{ icon: Navigation, title: "查看生活便利度", sub: communityName, type: { type: "amenities", communityName } }] : [],
+    },
+    listings: {
+      title: hasCommunityData ? `已定位到${communityName}，可以继续查看相关${wantsRentListings ? "出租" : "在售"}房源。` : hasCommunity ? `已识别${communityName}，但当前 Demo 暂未接入该小区房源。` : `可以继续查看杭州${wantsRentListings ? "租赁" : "在售"}房源。`,
+      copy: hasCommunity && !hasCommunityData ? "不会用其他小区房源替代回答，你可以先进入合作平台继续搜索。" : "房源价格与可租、可售状态由合作平台提供，实际信息以进入合作服务后的实时结果为准。",
+      actions: [{
+        icon: Search,
+        title: wantsRentListings ? "查看出租房源" : "查看在售房源",
+        sub: hasCommunityData ? communityName : "杭州合作平台房源",
+        type: hasCommunityData
+          ? { type: wantsRentListings ? "community-rent-listings" : "community-sale-listings", communityName }
+          : wantsRentListings ? "rent-listings" : "buy-listings",
+      }],
+    },
+    "policy-projects": {
+      title: "可以查看当前开放、即将开放和常态化登记的政策住房项目。",
+      copy: "支付宝可将分散在不同官方渠道的公告结构化展示，并提供开放、截止和材料变化提醒。",
+      actions: [{ icon: Search, title: "查看政策住房项目", sub: "按区域、类型与状态筛选", type: "affordable-projects" }],
+    },
+    "policy-materials": {
+      title: "人才房常见核验材料包括身份、学历、就业社保、人才认定、家庭住房和住房优惠情况。",
+      copy: "不同项目要求并不完全一致。支付宝可在授权后预核验并生成材料清单，正式申请仍以具体项目公告为准。",
+      actions: [{ icon: FileCheck2, title: "准备申请材料", sub: "授权核验并生成清单", type: "affordable-apply" }],
+    },
+    "policy-progress": {
+      title: "可以统一查看政策住房的报名、资格审核、选房和签约进度。",
+      copy: "状态变化、补充材料和选房时间可通过支付宝消息提醒，最终结果以政府部门审核为准。",
+      actions: [{ icon: Clock3, title: "查询申请进度", sub: "查看审核与入住服务", type: "affordable-progress" }],
+    },
+  };
+  const config = configs[id];
+  return (
+    <>
+      <div className="answer-copy">
+        <strong>{config.title}</strong>
+        <p>{config.copy}</p>
+      </div>
+      {config.actions.length > 0 && <ServiceActions title="继续办理" actions={config.actions} onService={onService} />}
+    </>
+  );
+}
+
 function CommunityAnswer({ query, communityName = "万科城市花园", onService }) {
+  if (communityName !== "万科城市花园") {
+    const hasName = communityName && communityName !== "该小区";
+    return (
+      <>
+        <div className="answer-copy boundary">
+          <div className="boundary-label"><ShieldCheck size={16} />数据边界说明</div>
+          <strong>{hasName ? `当前 Demo 暂未接入${communityName}的结构化小区数据。` : "请告诉我具体小区名称，我再查询小区数据。"}</strong>
+          <p>{hasName ? "我不会用杭州整体趋势或其他小区的数据代替回答。接入真实 MCP 后，可按小区返回二手成交、租金与房源卡片。" : "例如可以问“万科城市花园二手房价和租金怎么样”。"}</p>
+        </div>
+        <ServiceActions title="可以继续" actions={[
+          { icon: Search, title: "查看杭州在售房源", sub: "按区域与预算筛选", type: "buy-listings" },
+          { icon: Building2, title: "查看杭州出租房源", sub: "当前模拟接入自如", type: "rent-listings" },
+        ]} onService={onService} />
+      </>
+    );
+  }
   return (
     <>
       <div className="answer-copy">
@@ -765,7 +948,7 @@ function AffordableHousingAnswer({ onService }) {
         { icon: BellRing, title: "订阅开放提醒", sub: "截止、补充材料及时通知", type: "affordable-alerts" },
         { icon: Clock3, title: "查询申请进度", sub: "统一查看审核、选房与签约", type: "affordable-progress" },
       ]} onService={onService} />
-      <div className="source-note"><span>政策信息来源：杭州市住房租赁公众服务平台等官方渠道</span><span>申请资格、项目状态与租金以最新官方公告和审批结果为准。</span></div>
+      <div className="source-note"><span>政策能力演示参考：杭州市住房租赁公众服务平台等官方渠道</span><span>当前项目、日期与状态均为 Demo 模拟，正式信息以官方公告和审批结果为准。</span></div>
     </>
   );
 }
@@ -778,8 +961,10 @@ function PolicyHousingMatcher({ onService }) {
   const matches = identity === "newworker"
     ? [affordableProjects[2]]
     : workArea === "上城区"
-      ? [affordableProjects[0], affordableProjects[1]]
-      : [affordableProjects[1], affordableProjects[0]];
+      ? [affordableProjects[0]]
+      : workArea === "拱墅区"
+        ? [affordableProjects[1]]
+        : [];
 
   return (
     <section className="policy-matcher">
@@ -815,6 +1000,7 @@ function PolicyHousingMatcher({ onService }) {
           </div>
           <div className="policy-project-list">
             {matches.map((project) => <PolicyProjectCard project={project} key={project.name} onOpen={() => onService({ type: "affordable-project-detail", project })} />)}
+            {matches.length === 0 && <div className="policy-no-match"><BellRing size={18} /><div><strong>当前模拟项目中没有精确匹配</strong><span>不会推荐其他区域项目替代。可以订阅 {workArea} 新项目开放提醒。</span></div><button onClick={() => onService("affordable-alerts")}>订阅提醒</button></div>}
           </div>
         </div>
       )}
@@ -836,21 +1022,22 @@ function PolicyProjectCard({ project, onOpen }) {
   );
 }
 
-function SchoolAnswer({ onService }) {
+function SchoolAnswer({ communityName = "该小区", onService }) {
+  const displayName = communityName === "该小区" ? "该小区" : communityName;
   return (
     <>
       <div className="answer-copy boundary">
         <div className="boundary-label"><ShieldCheck size={16} />能力边界说明</div>
         <strong>学区划分和入学政策可能每年调整，我不能仅依据房产趋势数据判断入学资格。</strong>
-        <p>万科城市花园周边教育资源可以作为居住参考，但具体对应学校、落户年限和入学条件，请以杭州市及属地区教育部门当年公布的信息为准。</p>
+        <p>{displayName}周边教育资源可以作为居住参考，但具体对应学校、落户年限和入学条件，请以杭州市及属地区教育部门当年公布的信息为准。</p>
       </div>
-      <div className="official-card">
+      <button className="official-card" onClick={() => onService("school-policy")}>
         <div className="official-icon"><FileCheck2 size={21} /></div>
         <div><strong>查询杭州官方入学政策</strong><span>该回答未引用实时房产趋势数据</span></div>
         <ChevronRight size={18} />
-      </div>
+      </button>
       <ServiceActions title="还可以了解" actions={[
-        { icon: Navigation, title: "查看生活便利度", sub: "交通、商业与医疗", type: "amenities" },
+        { icon: Navigation, title: "查看生活便利度", sub: "交通、商业与医疗", type: { type: "amenities", communityName: displayName } },
         { icon: Search, title: "查看周边房源", sub: "仅作为居住选择参考", type: "buy-listings" },
       ]} onService={onService} />
     </>
@@ -858,7 +1045,7 @@ function SchoolAnswer({ onService }) {
 }
 
 function InsightCard({ title, subtitle, children }) {
-  return <section className="insight-card"><div className="card-title"><div><strong>{title}</strong><span>{subtitle}</span></div><button aria-label="展开"><MoreHorizontal size={18} /></button></div>{children}</section>;
+  return <section className="insight-card"><div className="card-title"><div><strong>{title}</strong><span>{subtitle}</span></div><span className="card-more" aria-hidden="true"><MoreHorizontal size={18} /></span></div>{children}</section>;
 }
 
 function MetricGrid({ items }) {
@@ -908,13 +1095,13 @@ function SourceNote() {
   return <div className="source-note"><span>数据支持：趋势动物 · 模拟 MCP 返回</span><span>以上数据反映历史趋势，不代表未来走势，不构成投资建议。</span></div>;
 }
 
-function Composer({ value, setValue, onSend }) {
+function Composer({ value, setValue, onSend, onService }) {
   return (
     <div className="composer-wrap">
       <div className="composer">
-        <button className="icon-button" aria-label="添加"><Plus size={20} /></button>
+        <button className="icon-button" aria-label="添加" onClick={() => onService("attachments")}><Plus size={20} /></button>
         <input value={value} onChange={(e) => setValue(e.target.value)} onKeyDown={(e) => e.key === "Enter" && onSend()} placeholder="问问杭州房价、租房或公积金…" />
-        <button className="icon-button" aria-label="语音"><Mic size={20} /></button>
+        <button className="icon-button" aria-label="语音" onClick={() => onService("voice")}><Mic size={20} /></button>
         <button className="send-button" onClick={onSend} aria-label="发送"><Send size={17} /></button>
       </div>
       <span className="composer-note">AI回答仅供参考，重要信息请以官方渠道为准</span>
@@ -922,11 +1109,11 @@ function Composer({ value, setValue, onSend }) {
   );
 }
 
-function JourneyPanel({ journey, onService }) {
+function JourneyPanel({ journey, onService, onReset }) {
   const steps = ["了解需求", "获得分析", "继续办事"];
   return (
     <aside className="journey-panel">
-      <div className="journey-head"><span>本次看房旅程</span><button><RefreshCw size={15} />新对话</button></div>
+      <div className="journey-head"><span>本次看房旅程</span><button onClick={onReset}><RefreshCw size={15} />新对话</button></div>
       <div className="journey-steps">
         {steps.map((step, index) => <div className={journey.includes(step) ? "done" : ""} key={step}><i>{journey.includes(step) ? <Check size={13} /> : index + 1}</i><span>{step}</span></div>)}
       </div>
@@ -959,12 +1146,12 @@ function Consent({ onAccept }) {
 
 function ServiceDrawer({ type, onClose }) {
   const drawerType = typeof type === "string" ? type : type.type;
-  const content = drawerType === "mortgage" ? <Mortgage /> : drawerType === "fund" ? <Fund /> : drawerType === "buy-listings" ? <Listings kind="buy" /> : drawerType === "rent-listings" ? <Listings kind="rent" /> : drawerType === "community-sale-listings" ? <CommunityListings mode="sale" communityName={type.communityName} /> : drawerType === "community-rent-listings" ? <CommunityListings mode="rent" communityName={type.communityName} /> : drawerType === "rent-detail" ? <RentDetail home={type.home} /> : drawerType === "affordable-projects" ? <PolicyProjects /> : drawerType === "affordable-alerts" ? <PolicyAlerts /> : drawerType === "affordable-apply" ? <PolicyApplication /> : drawerType === "affordable-progress" ? <PolicyProgress /> : drawerType === "affordable-project-detail" ? <PolicyProjectDetail project={type.project} /> : <GenericService type={drawerType} />;
+  const content = drawerType === "mortgage" ? <Mortgage /> : drawerType === "fund" ? <Fund /> : drawerType === "buy-listings" ? <Listings kind="buy" /> : drawerType === "rent-listings" ? <Listings kind="rent" /> : drawerType === "community-sale-listings" ? <CommunityListings mode="sale" communityName={type.communityName} /> : drawerType === "community-rent-listings" ? <CommunityListings mode="rent" communityName={type.communityName} /> : drawerType === "rent-detail" ? <RentDetail home={type.home} /> : drawerType === "affordable-projects" ? <PolicyProjects /> : drawerType === "affordable-alerts" ? <PolicyAlerts /> : drawerType === "affordable-apply" ? <PolicyApplication /> : drawerType === "affordable-progress" ? <PolicyProgress /> : drawerType === "affordable-project-detail" ? <PolicyProjectDetail project={type.project} /> : <GenericService type={drawerType} request={type} />;
   return (
-    <div className="drawer-backdrop" onMouseDown={onClose}>
-      <section className="service-drawer" onMouseDown={(event) => event.stopPropagation()}>
+    <div className="drawer-backdrop" onClick={onClose}>
+      <section className="service-drawer" onClick={(event) => event.stopPropagation()}>
         <div className="drawer-handle" />
-        <button className="drawer-close" onClick={onClose} aria-label="关闭"><X size={20} /></button>
+        <button className="drawer-close" onClick={(event) => { event.preventDefault(); event.stopPropagation(); onClose(); }}><X size={17} /><span>关闭</span></button>
         {content}
       </section>
     </div>
@@ -973,7 +1160,10 @@ function ServiceDrawer({ type, onClose }) {
 
 function Listings({ kind }) {
   const [selectedRent, setSelectedRent] = useState(null);
+  const [selectedBuy, setSelectedBuy] = useState(null);
+  const [feedback, setFeedback] = useState("");
   const items = listings[kind];
+  if (selectedBuy) return <><button className="detail-back" onClick={() => setSelectedBuy(null)}><ArrowLeft size={15} />返回房源列表</button><SimpleListingDetail item={selectedBuy} mode="sale" /></>;
   if (kind === "rent") {
     if (selectedRent) {
       return (
@@ -991,11 +1181,12 @@ function Listings({ kind }) {
           <div><strong>来自合作平台的实时房源</strong><small>统一展示价格、通勤、签约与履约服务</small></div>
           <BadgeCheck size={18} />
         </div>
-        <div className="filter-row"><button>未来科技城<ChevronDown size={13} /></button><button>5,500元内<ChevronDown size={13} /></button><button>整租优先<ChevronDown size={13} /></button><button aria-label="筛选"><SlidersHorizontal size={15} /></button></div>
+        <div className="filter-row"><button onClick={() => setFeedback("位置筛选：未来科技城")}>未来科技城<ChevronDown size={13} /></button><button onClick={() => setFeedback("预算筛选：5,500 元内")}>5,500元内<ChevronDown size={13} /></button><button onClick={() => setFeedback("租住类型：整租优先")}>整租优先<ChevronDown size={13} /></button><button aria-label="更多筛选" onClick={() => setFeedback("更多筛选条件已展开（Demo）")}><SlidersHorizontal size={15} /></button></div>
         <div className="ka-home-list drawer-homes">
           {kaRentHomes.map((home, index) => <KAHousingCard key={home.id} home={home} rank={index + 1} compact onOpen={() => setSelectedRent(home)} />)}
         </div>
-        <button className="primary-wide">进入自如查看更多房源<ArrowRight size={17} /></button>
+        <button className="primary-wide" onClick={() => setFeedback("将跳转自如合作服务查看实时房源（Demo）")}>进入自如查看更多房源<ArrowRight size={17} /></button>
+        {feedback && <ActionFeedback text={feedback} />}
         <p className="drawer-footnote">房源信息为 Demo 模拟数据，实际价格与可租状态以合作平台为准。</p>
       </>
     );
@@ -1003,18 +1194,22 @@ function Listings({ kind }) {
   return (
     <>
       <div className="drawer-title"><span>{kind === "buy" ? "预算内在售房源" : "未来科技城周边租房"}</span><small>聚合展示 · 模拟房源</small></div>
-      <div className="filter-row"><button>区域<ChevronDown size={13} /></button><button>总价<ChevronDown size={13} /></button><button>户型<ChevronDown size={13} /></button><button aria-label="筛选"><SlidersHorizontal size={15} /></button></div>
+      <div className="filter-row"><button onClick={() => setFeedback("区域筛选已展开（Demo）")}>区域<ChevronDown size={13} /></button><button onClick={() => setFeedback("总价筛选已展开（Demo）")}>总价<ChevronDown size={13} /></button><button onClick={() => setFeedback("户型筛选已展开（Demo）")}>户型<ChevronDown size={13} /></button><button aria-label="更多筛选" onClick={() => setFeedback("更多筛选条件已展开（Demo）")}><SlidersHorizontal size={15} /></button></div>
       <div className="listing-list">
-        {items.map((item, index) => <button className="listing-item" key={item.title}><span className={`listing-image image-${index + 1}`}><Home size={25} /></span><span className="listing-content"><strong>{item.title}</strong><small>{item.meta}</small><em>{item.tag}</em></span><b>{item.price}</b></button>)}
+        {items.map((item, index) => <button className="listing-item" key={item.title} onClick={() => setSelectedBuy(item)}><span className={`listing-image image-${index + 1}`}><Home size={25} /></span><span className="listing-content"><strong>{item.title}</strong><small>{item.meta}</small><em>{item.tag}</em></span><b>{item.price}</b></button>)}
       </div>
-      <button className="primary-wide">进入房源服务查看更多<ArrowRight size={17} /></button>
+      <button className="primary-wide" onClick={() => setFeedback("将进入合作房源服务查看实时在售状态（Demo）")}>进入房源服务查看更多<ArrowRight size={17} /></button>
+      {feedback && <ActionFeedback text={feedback} />}
     </>
   );
 }
 
 function CommunityListings({ mode, communityName = "万科城市花园" }) {
   const [active, setActive] = useState(mode);
+  const [selected, setSelected] = useState(null);
+  const [feedback, setFeedback] = useState("");
   const homes = communityHomes[active];
+  if (selected) return <><button className="detail-back" onClick={() => setSelected(null)}><ArrowLeft size={15} />返回小区房源</button><SimpleListingDetail item={selected} mode={active} communityName={communityName} /></>;
   return (
     <>
       <div className="drawer-title"><span>{communityName}房源</span><small>与小区市场卡片联动 · 模拟房源</small></div>
@@ -1025,42 +1220,75 @@ function CommunityListings({ mode, communityName = "万科城市花园" }) {
       </div>
       <div className="community-home-list">
         {homes.map((home) => (
-          <button className="community-home-card" key={home.title}>
+          <button className="community-home-card" key={home.title} onClick={() => setSelected(home)}>
             <span className="community-home-image" style={{ backgroundImage: `url(${home.image})` }}><em>{home.tag}</em></span>
             <span className="community-home-copy"><strong>{home.title.replace("万科城市花园", communityName)}</strong><small>{home.meta}</small><span>{home.unit}</span></span>
             <b>{home.price}<ChevronRight size={14} /></b>
           </button>
         ))}
       </div>
-      <button className="primary-wide">{active === "sale" ? "查看全部二手房源" : "查看全部出租房源"}<ArrowRight size={17} /></button>
+      <button className="primary-wide" onClick={() => setFeedback(`将进入合作平台查看${communityName}全部${active === "sale" ? "二手" : "出租"}房源（Demo）`)}>{active === "sale" ? "查看全部二手房源" : "查看全部出租房源"}<ArrowRight size={17} /></button>
+      {feedback && <ActionFeedback text={feedback} />}
       <p className="drawer-footnote">房源及价格为 Demo 模拟数据，实际信息以合作平台为准。</p>
     </>
   );
 }
 
+function SimpleListingDetail({ item, mode, communityName }) {
+  const [submitted, setSubmitted] = useState(false);
+  const isRent = mode === "rent";
+  const title = communityName ? item.title.replace("万科城市花园", communityName) : item.title;
+  return (
+    <>
+      <div className="drawer-title"><span>{title}</span><small>{isRent ? "出租房源详情" : "在售房源详情"} · 模拟展示</small></div>
+      {item.image ? <div className="simple-listing-image" style={{ backgroundImage: `url(${item.image})` }} /> : <div className="simple-listing-placeholder"><Home size={32} /></div>}
+      <div className="simple-listing-price"><strong>{item.price}</strong>{item.unit && <span>{item.unit}</span>}</div>
+      <div className="policy-detail-section"><strong>房源信息</strong><p>{item.meta}</p></div>
+      <div className="official-source-row"><BadgeCheck size={16} /><div><strong>合作平台房源</strong><span>实际价格与可租、可售状态以合作平台实时信息为准。</span></div></div>
+      <button className="primary-wide" onClick={() => setSubmitted(true)}>{submitted ? <><Check size={16} />已提交咨询意向</> : <>{isRent ? "预约看房" : "咨询房源"}<ArrowRight size={17} /></>}</button>
+      {submitted && <ActionFeedback text="合作平台顾问将联系你确认房源状态（Demo）" />}
+    </>
+  );
+}
+
+function ActionFeedback({ text }) {
+  return <div className="action-feedback"><Check size={15} /><span>{text}</span></div>;
+}
+
 function PolicyProjects() {
   const [selected, setSelected] = useState(null);
   const [subscribed, setSubscribed] = useState(false);
+  const [typeFilter, setTypeFilter] = useState("全部类型");
+  const [areaFilter, setAreaFilter] = useState("全部区域");
+  const [stageFilter, setStageFilter] = useState("全部状态");
+  const cycle = (current, options, setter) => setter(options[(options.indexOf(current) + 1) % options.length]);
+  const filteredProjects = affordableProjects.filter((project) =>
+    (typeFilter === "全部类型" || project.type.includes(typeFilter)) &&
+    (areaFilter === "全部区域" || project.area === areaFilter) &&
+    (stageFilter === "全部状态" || project.stage === stageFilter)
+  );
   if (selected) return <><button className="detail-back" onClick={() => setSelected(null)}><ArrowLeft size={15} />返回项目列表</button><PolicyProjectDetail project={selected} /></>;
   return (
     <>
-      <div className="drawer-title"><span>杭州政策住房项目</span><small>聚合官方公告 · 项目状态定期更新</small></div>
-      <div className="policy-source-banner"><ShieldCheck size={20} /><div><strong>官方信息结构化</strong><span>将分散在市级、各区和运营方的公告统一为可筛选项目</span></div></div>
+      <div className="drawer-title"><span>杭州政策住房项目</span><small>模拟结构化公告 · 正式接入后定期更新</small></div>
+      <div className="policy-source-banner"><ShieldCheck size={20} /><div><strong>官方公告结构化效果（Demo）</strong><span>演示将市级、各区和运营方公告统一为可筛选项目</span></div></div>
       <div className="policy-live-summary">
         <span><strong>1</strong><small>开放申请中</small></span>
         <span><strong>1</strong><small>即将开放</small></span>
         <span><strong>今天 09:30</strong><small>最近更新</small></span>
         <button className={subscribed ? "active" : ""} onClick={() => setSubscribed(!subscribed)}>{subscribed ? <Check size={14} /> : <BellRing size={14} />}{subscribed ? "已订阅" : "订阅更新"}</button>
       </div>
-      <div className="filter-row"><button>全部类型<ChevronDown size={13} /></button><button>工作区域<ChevronDown size={13} /></button><button>开放状态<ChevronDown size={13} /></button><button aria-label="筛选"><SlidersHorizontal size={15} /></button></div>
-      <div className="policy-project-list drawer-policy-list">{affordableProjects.map((project) => <PolicyProjectCard key={project.name} project={project} onOpen={() => setSelected(project)} />)}</div>
-      <p className="drawer-footnote">申请期和项目状态以最新官方公告为准，支付宝可提供变更提醒。</p>
+      <div className="filter-row"><button onClick={() => cycle(typeFilter, ["全部类型", "人才专项租赁住房", "蓝领公寓"], setTypeFilter)}>{typeFilter}<ChevronDown size={13} /></button><button onClick={() => cycle(areaFilter, ["全部区域", "上城区", "拱墅区", "钱塘区"], setAreaFilter)}>{areaFilter}<ChevronDown size={13} /></button><button onClick={() => cycle(stageFilter, ["全部状态", "开放申请中", "即将开放", "常态化登记"], setStageFilter)}>{stageFilter}<ChevronDown size={13} /></button><button aria-label="重置筛选" onClick={() => { setTypeFilter("全部类型"); setAreaFilter("全部区域"); setStageFilter("全部状态"); }}><SlidersHorizontal size={15} /></button></div>
+      <div className="policy-project-list drawer-policy-list">{filteredProjects.map((project) => <PolicyProjectCard key={project.name} project={project} onOpen={() => setSelected(project)} />)}{filteredProjects.length === 0 && <div className="empty-filter">暂无符合当前筛选的项目</div>}</div>
+      <p className="drawer-footnote">本页项目状态、日期和租金均为 Demo 模拟，正式信息以最新官方公告为准。</p>
     </>
   );
 }
 
 function PolicyProjectDetail({ project }) {
   const [subscribed, setSubscribed] = useState(false);
+  const [checking, setChecking] = useState(false);
+  if (checking) return <><button className="detail-back" onClick={() => setChecking(false)}><ArrowLeft size={15} />返回项目详情</button><PolicyApplication /></>;
   return (
     <>
       <div className="drawer-title"><span>{project.name}</span><small>{project.area} · {project.type}</small></div>
@@ -1072,10 +1300,10 @@ function PolicyProjectDetail({ project }) {
       </div>
       <div className="policy-detail-section"><strong>适合人群</strong><p>{project.fit}</p></div>
       <div className="policy-detail-section"><strong>常见准入核验项</strong><div className="requirement-grid"><span><BriefcaseBusiness size={16} />劳动关系 / 社保</span><span><FileCheck2 size={16} />居住证或户籍</span><span><Home size={16} />家庭住房情况</span><span><ShieldCheck size={16} />住房优惠状态</span></div></div>
-      <div className="official-source-row"><BadgeCheck size={16} /><div><strong>已结构化官方公告</strong><span>{project.source} · 更新于 {project.updated}</span></div></div>
+      <div className="official-source-row"><BadgeCheck size={16} /><div><strong>模拟结构化官方公告</strong><span>{project.source} · Demo 更新于 {project.updated}</span></div></div>
       <button className={`secondary-wide policy-subscribe-button ${subscribed ? "active" : ""}`} onClick={() => setSubscribed(!subscribed)}>{subscribed ? <><Check size={16} />已订阅项目变化</> : <><BellRing size={16} />订阅开放与截止提醒</>}</button>
-      <button className="primary-wide">授权核验申请条件<ArrowRight size={17} /></button>
-      <p className="drawer-footnote">当前为产品 Demo，不会实际提交政府申请。</p>
+      <button className="primary-wide" onClick={() => setChecking(true)}>授权核验申请条件<ArrowRight size={17} /></button>
+      <p className="drawer-footnote">当前项目状态、日期和租金为产品 Demo 模拟，不会实际提交政府申请。</p>
     </>
   );
 }
@@ -1136,16 +1364,18 @@ function PolicyProgress() {
 }
 
 function MoveInServices({ paid, setPaid }) {
+  const [selectedService, setSelectedService] = useState("");
   return (
     <>
       <div className="movein-hero"><KeyRound size={23} /><div><strong>审核通过后，继续在支付宝办入住</strong><span>签约、缴租、公积金提取与生活服务统一承接。</span></div></div>
       <div className="rent-bill-card"><span><ReceiptText size={18} /><div><small>7月房租账单</small><strong>2,680 元</strong><em>7月5日前支付</em></div></span><button className={paid ? "paid" : ""} onClick={() => setPaid(true)}>{paid ? <><Check size={14} />已缴纳</> : <><CreditCard size={14} />立即缴租</>}</button></div>
       <div className="movein-services-grid">
-        <button><FileCheck2 size={19} /><strong>在线签约</strong><small>查看合同与实名认证</small></button>
-        <button><Landmark size={19} /><strong>公积金提取</strong><small>按月提取用于支付房租</small></button>
-        <button><WalletCards size={19} /><strong>生活缴费</strong><small>水电燃气账单统一管理</small></button>
-        <button><Truck size={19} /><strong>搬家保洁</strong><small>预约入住与维修服务</small></button>
+        <button onClick={() => setSelectedService("已打开在线签约清单，可查看合同并完成实名认证（Demo）")}><FileCheck2 size={19} /><strong>在线签约</strong><small>查看合同与实名认证</small></button>
+        <button onClick={() => setSelectedService("已进入公积金租房提取授权流程（Demo）")}><Landmark size={19} /><strong>公积金提取</strong><small>按月提取用于支付房租</small></button>
+        <button onClick={() => setSelectedService("已打开水电燃气生活缴费管理（Demo）")}><WalletCards size={19} /><strong>生活缴费</strong><small>水电燃气账单统一管理</small></button>
+        <button onClick={() => setSelectedService("已打开搬家、保洁与维修预约服务（Demo）")}><Truck size={19} /><strong>搬家保洁</strong><small>预约入住与维修服务</small></button>
       </div>
+      {selectedService && <ActionFeedback text={selectedService} />}
       <div className="progress-reminder"><BellRing size={17} /><div><strong>房租与合同提醒已开启</strong><span>缴费日前、合同到期前和政策复核前主动提醒。</span></div></div>
       <p className="drawer-footnote">入住服务为产品设想 Demo，实际能力以合作接入情况为准。</p>
     </>
@@ -1154,6 +1384,7 @@ function MoveInServices({ paid, setPaid }) {
 
 function RentDetail({ home }) {
   const [booked, setBooked] = useState(false);
+  const [consulted, setConsulted] = useState(false);
   return (
     <>
       <div className="rent-detail-hero" style={{ backgroundImage: `url(${home.image})` }}>
@@ -1173,10 +1404,11 @@ function RentDetail({ home }) {
         <div><CalendarClock size={18} /><span><strong>看房时间</strong><small>今天 18:30 后<br />明天全天可约</small></span></div>
       </div>
       <div className="detail-actions">
-        <button className="secondary-wide"><MessageCircleMore size={16} />咨询管家</button>
+        <button className="secondary-wide" onClick={() => setConsulted(true)}>{consulted ? <><Check size={16} />已联系管家</> : <><MessageCircleMore size={16} />咨询管家</>}</button>
         <button className="primary-wide" onClick={() => setBooked(true)}>{booked ? <><Check size={17} />已提交看房意向</> : <>预约看房<ArrowRight size={17} /></>}</button>
       </div>
       {booked && <div className="booking-success"><Check size={15} />自如管家将在 10 分钟内联系你确认时间（Demo）</div>}
+      {consulted && <div className="booking-success"><Check size={15} />已发起咨询，自如管家将回复房源实时状态（Demo）</div>}
       <p className="drawer-footnote">房源信息为 Demo 模拟数据，实际价格与可租状态以合作平台为准。</p>
     </>
   );
@@ -1186,6 +1418,7 @@ function Mortgage() {
   const [price, setPrice] = useState(300);
   const [down, setDown] = useState(30);
   const [years, setYears] = useState(30);
+  const [showPlan, setShowPlan] = useState(false);
   const loan = price * (1 - down / 100);
   const monthlyRate = 3.1 / 100 / 12;
   const months = years * 12;
@@ -1197,7 +1430,8 @@ function Mortgage() {
       <div className="form-row"><label>房屋总价</label><div><input type="number" value={price} onChange={(e) => setPrice(Number(e.target.value))} /><span>万元</span></div></div>
       <div className="form-row"><label>首付比例</label><div><input type="number" value={down} onChange={(e) => setDown(Number(e.target.value))} /><span>%</span></div></div>
       <div className="form-row"><label>贷款期限</label><div><input type="number" value={years} onChange={(e) => setYears(Number(e.target.value))} /><span>年</span></div></div>
-      <button className="primary-wide">查看公积金组合贷方案<ArrowRight size={17} /></button>
+      <button className="primary-wide" onClick={() => setShowPlan(true)}>查看公积金组合贷方案<ArrowRight size={17} /></button>
+      {showPlan && <div className="application-generated"><Calculator size={17} /><div><strong>组合贷方案已生成</strong><span>模拟方案：公积金贷款 65 万，其余使用商业贷款；实际额度与利率以审批为准。</span></div></div>}
       <p className="drawer-footnote">利率与测算结果仅供参考，实际以贷款机构审批为准。</p>
     </>
   );
@@ -1205,6 +1439,7 @@ function Mortgage() {
 
 function Fund() {
   const [authorized, setAuthorized] = useState(false);
+  const [selected, setSelected] = useState("");
   return (
     <>
       <div className="drawer-title"><span>杭州公积金服务</span><small>官方服务授权查询</small></div>
@@ -1219,27 +1454,46 @@ function Fund() {
       ) : (
         <>
           <div className="fund-balance"><span>账户余额</span><strong>¥ 86,420.35</strong><small>更新于刚刚 · 模拟结果</small></div>
-          <div className="fund-options"><button><Home size={19} /><span><strong>购房贷款测算</strong><small>预计最高可贷 65 万</small></span><ChevronRight size={17} /></button><button><Building2 size={19} /><span><strong>租房提取</strong><small>查看可提取额度与材料</small></span><ChevronRight size={17} /></button></div>
+          <div className="fund-options"><button onClick={() => setSelected("贷款")}><Home size={19} /><span><strong>购房贷款测算</strong><small>预计最高可贷 65 万</small></span><ChevronRight size={17} /></button><button onClick={() => setSelected("租房")}><Building2 size={19} /><span><strong>租房提取</strong><small>查看可提取额度与材料</small></span><ChevronRight size={17} /></button></div>
+          {selected === "贷款" && <ActionFeedback text="模拟测算：预计最高可贷 65 万，实际以公积金中心审核为准。" />}
+          {selected === "租房" && <ActionFeedback text="已打开租房提取材料清单与官方办理入口（Demo）。" />}
         </>
       )}
     </>
   );
 }
 
-function GenericService({ type }) {
-  const isDeposit = type === "deposit";
+function GenericService({ type, request }) {
+  const [activated, setActivated] = useState(false);
+  const communityName = typeof request === "object" && request.communityName && request.communityName !== "该小区" ? request.communityName : "万科城市花园";
+  const hasCommunityData = communityName === "万科城市花园";
+  const configs = {
+    deposit: ["花呗免押租房", "信用好，可以少交一笔押金", "签约时选择支持免押的合作房源，授权评估后即可查看结果。", [["可免押房源", "126套"], ["预计节省", "4,500元"], ["在线签约", "支持"]], "查看支持免押的房源"],
+    amenities: [`${communityName}生活便利度`, hasCommunityData ? "日常生活，步行范围内就能解决" : "当前 Demo 暂未接入该小区配套数据", hasCommunityData ? `${communityName}周边的交通、商业、社区医疗与生活服务可作为居住参考。` : "不会用其他小区的生活便利度数据替代回答，正式接入后可继续查询。", hasCommunityData ? [["地铁距离", "约680m"], ["生活便利", "较高"], ["维修保洁", "可预约"]] : [["交通数据", "待接入"], ["商业数据", "待接入"], ["生活服务", "可搜索"]], "查看周边生活服务"],
+    "school-policy": ["杭州入学政策", "以当年官方公布政策为准", "支付宝可承接官方政策查询入口，但不会根据房产信息直接判断入学资格。", [["政策来源", "官方"], ["更新时间", "以公告为准"], ["实时数据", "未引用"]], "进入官方政策服务"],
+    attachments: ["添加资料", "上传资料帮助 Agent 理解需求", "可添加户型图、房源截图或政策公告，当前 Demo 不会实际上传文件。", [["支持图片", "规划中"], ["支持公告", "规划中"], ["隐私保护", "授权后使用"]], "选择资料"],
+    voice: ["语音提问", "可以直接说出住房需求", "当前 Demo 展示语音入口，正式版本需接入支付宝语音识别能力。", [["普通话", "支持规划"], ["自动转写", "支持规划"], ["隐私提示", "录音前确认"]], "开始语音提问"],
+    history: ["历史咨询", "统一回看房产问题和办理进度", "可沉淀趋势问答、找房条件、政策住房申请与服务办理记录。", [["趋势问答", "3条"], ["找房方案", "1个"], ["办理进度", "1项"]], "查看全部记录"],
+    profile: ["我的住房服务", "管理订阅、授权和办理记录", "在这里统一管理政策住房订阅、房源咨询、合同账单与个人授权。", [["消息订阅", "已开启"], ["授权管理", "可查看"], ["办理记录", "2项"]], "管理我的服务"],
+    cities: ["选择城市", "当前 Demo 聚焦杭州", "正式版本可根据城市切换房价趋势、政策住房、公积金与合作房源服务。", [["当前城市", "杭州"], ["试点计划", "杭州/广州"], ["自动定位", "需授权"]], "保持使用杭州"],
+    settings: ["更多设置", "管理数据来源与回答偏好", "可查看数据来源、风险提示、隐私授权与消息提醒设置。", [["数据来源", "可查看"], ["风险提示", "已开启"], ["消息提醒", "已开启"]], "查看设置"],
+    "ai-info": ["支付宝 AI", "从回答问题到继续办理", "房多多 Agent 是房产垂直场景 Demo，重点展示问答、数据分析与支付宝服务闭环。", [["问答能力", "模拟 MCP"], ["服务承接", "支付宝"], ["风险控制", "已展示"]], "返回房产 Agent"],
+  };
+  const config = configs[type] || configs.amenities;
+  const [title, headline, copy, metrics, action] = config;
   return (
     <>
-      <div className="drawer-title"><span>{isDeposit ? "花呗免押租房" : "小区生活便利度"}</span><small>支付宝服务演示</small></div>
-      <div className="generic-hero">{isDeposit ? <ShieldCheck size={31} /> : <Navigation size={31} />}<strong>{isDeposit ? "信用好，可以少交一笔押金" : "日常生活，步行范围内就能解决"}</strong><p>{isDeposit ? "签约时选择支持免押的合作房源，授权评估后即可查看结果。" : "万科城市花园周边覆盖地铁、商业、社区医疗与日常生活服务。"}</p></div>
-      <div className="generic-grid">{(isDeposit ? [["可免押房源", "126套"], ["预计节省", "4,500元"], ["在线签约", "支持"]] : [["地铁距离", "约680m"], ["生活便利", "较高"], ["维修保洁", "可预约"]]).map(([a, b]) => <div key={a}><span>{a}</span><strong>{b}</strong></div>)}</div>
-      <button className="primary-wide">{isDeposit ? "查看支持免押的房源" : "查看周边生活服务"}<ArrowRight size={17} /></button>
+      <div className="drawer-title"><span>{title}</span><small>支付宝服务演示</small></div>
+      <div className="generic-hero">{type === "deposit" ? <ShieldCheck size={31} /> : <Navigation size={31} />}<strong>{headline}</strong><p>{copy}</p></div>
+      <div className="generic-grid">{metrics.map(([a, b]) => <div key={a}><span>{a}</span><strong>{b}</strong></div>)}</div>
+      <button className="primary-wide" onClick={() => setActivated(true)}>{activated ? <><Check size={16} />已响应</> : <>{action}<ArrowRight size={17} /></>}</button>
+      {activated && <ActionFeedback text={`${action}操作已响应（Demo）`} />}
     </>
   );
 }
 
-function BottomNav({ onService }) {
-  return <nav className="bottom-nav"><button className="active"><Sparkles size={20} /><span>问房</span></button><button onClick={() => onService("buy-listings")}><Search size={20} /><span>找房</span></button><button onClick={() => onService("fund")}><WalletCards size={20} /><span>服务</span></button><button><Menu size={20} /><span>我的</span></button></nav>;
+function BottomNav({ onService, onReset }) {
+  return <nav className="bottom-nav"><button className="active" onClick={onReset}><Sparkles size={20} /><span>问房</span></button><button onClick={() => onService("buy-listings")}><Search size={20} /><span>找房</span></button><button onClick={() => onService("fund")}><WalletCards size={20} /><span>服务</span></button><button onClick={() => onService("profile")}><Menu size={20} /><span>我的</span></button></nav>;
 }
 
 createRoot(document.getElementById("root")).render(<App />);
