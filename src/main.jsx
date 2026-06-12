@@ -50,6 +50,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { identifyPrompt } from "./intent.js";
 import "./styles.css";
 
 const BLUE = "#1677ff";
@@ -96,11 +97,20 @@ const communityData = [
   { month: "6月", price: 34500, deal: 7 },
 ];
 
+const communityRentData = [
+  { month: "1月", rent: 5150 },
+  { month: "2月", rent: 5100 },
+  { month: "3月", rent: 5200 },
+  { month: "4月", rent: 5250 },
+  { month: "5月", rent: 5200 },
+  { month: "6月", rent: 5300 },
+];
+
 const prompts = [
   { id: "trend", label: "杭州最近房价什么走势？", icon: TrendingDown },
   { id: "budget", label: "300万预算，余杭和萧山怎么选？", icon: WalletCards },
   { id: "rent", label: "我想在杭州租房，帮我找找", icon: Building2 },
-  { id: "community", label: "万科城市花园最近成交怎么样？", icon: Home },
+  { id: "community", label: "万科城市花园二手房价和租金？", icon: Home },
   { id: "school", label: "万科城市花园学区怎么样？", icon: CircleHelp },
 ];
 
@@ -108,7 +118,7 @@ const suggestions = {
   trend: ["300万预算适合看哪里？", "看看余杭和萧山对比", "我能贷多少钱？"],
   budget: ["查看余杭在售房源", "按我的收入算月供", "余杭最近房价走势"],
   rent: ["怎么提取公积金付房租？", "自如房源支持免押吗？", "想住得离公司更近"],
-  community: ["查看该小区在售房源", "对比周边小区", "算一算月供"],
+  community: ["这个小区近半年成交怎么样？", "查看该小区出租房源", "算一算租售比"],
   school: ["查询杭州入学政策", "看看小区生活便利度", "查看周边在售房源"],
 };
 
@@ -122,6 +132,19 @@ const listings = {
     { title: "自如整租 · 西溪北苑", meta: "整租一居 · 42㎡ · 良睦路地铁站", price: "4,680元/月", tag: "花呗免押" },
     { title: "自如整租 · 欧美金融城", meta: "整租一居 · 46㎡ · 海创园通勤约15分钟", price: "4,980元/月", tag: "今日可看" },
     { title: "自如友家 · 仓前", meta: "品质合租 · 独立卫浴 · 可月付", price: "3,280元/月", tag: "可月付" },
+  ],
+};
+
+const communityHomes = {
+  sale: [
+    { title: "万科城市花园 · 89㎡三房", meta: "中层 · 南北通透 · 满五年", price: "306万", unit: "34,382元/㎡", tag: "近参考价", image: "https://images.unsplash.com/photo-1560185008-b033106af5c3?auto=format&fit=crop&w=900&q=80" },
+    { title: "万科城市花园 · 108㎡三房", meta: "高层 · 精装修 · 带车位", price: "386万", unit: "35,741元/㎡", tag: "改善户型", image: "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=900&q=80" },
+    { title: "万科城市花园 · 72㎡两房", meta: "中层 · 朝南 · 近地铁", price: "242万", unit: "33,611元/㎡", tag: "总价较低", image: "https://images.unsplash.com/photo-1484154218962-a197022b5858?auto=format&fit=crop&w=900&q=80" },
+  ],
+  rent: [
+    { title: "万科城市花园 · 整租两房", meta: "72㎡ · 朝南 · 押一付三", price: "5,300元/月", unit: "可随时看房", tag: "主流租金", image: "https://images.unsplash.com/photo-1502672023488-70e25813eb80?auto=format&fit=crop&w=900&q=80" },
+    { title: "万科城市花园 · 整租三房", meta: "89㎡ · 精装修 · 可月付", price: "6,800元/月", unit: "支持花呗免押", tag: "家庭整租", image: "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=900&q=80" },
+    { title: "万科城市花园 · 品质合租", meta: "主卧 · 独立卫浴 · 包保洁", price: "3,180元/月", unit: "自如模拟房源", tag: "预算更轻", image: "https://images.unsplash.com/photo-1493809842364-78817add7ffb?auto=format&fit=crop&w=900&q=80" },
   ],
 };
 
@@ -233,7 +256,7 @@ function App() {
     setInput("");
     setLoading(true);
     window.setTimeout(() => {
-      setMessages((prev) => [...prev, { role: "agent", id }]);
+      setMessages((prev) => [...prev, { role: "agent", id, query: text }]);
       setLoading(false);
       setJourney((prev) => (prev.includes("获得分析") ? prev : [...prev, "获得分析"]));
     }, 760);
@@ -262,7 +285,7 @@ function App() {
                 message.role === "user" ? (
                   <UserMessage key={index} text={message.text} />
                 ) : (
-                  <AgentAnswer key={index} id={message.id} onAsk={ask} onService={openService} />
+                  <AgentAnswer key={index} id={message.id} query={message.query} onAsk={ask} onService={openService} />
                 )
               )}
               {loading && <LoadingAnswer />}
@@ -277,14 +300,6 @@ function App() {
       {drawer && <ServiceDrawer type={drawer} onClose={() => setDrawer(null)} />}
     </div>
   );
-}
-
-function identifyPrompt(text) {
-  if (/学区|学校|入学/.test(text)) return "school";
-  if (/租|免押|公积金.*房租/.test(text)) return "rent";
-  if (/万科|小区|成交/.test(text)) return "community";
-  if (/预算|余杭|萧山|怎么选/.test(text)) return "budget";
-  return "trend";
 }
 
 function DesktopNav() {
@@ -362,12 +377,12 @@ function LoadingAnswer() {
   );
 }
 
-function AgentAnswer({ id, onAsk, onService }) {
+function AgentAnswer({ id, query, onAsk, onService }) {
   const content = {
     trend: <TrendAnswer onService={onService} />,
     budget: <BudgetAnswer onService={onService} />,
     rent: <RentAnswer onService={onService} />,
-    community: <CommunityAnswer onService={onService} />,
+    community: <CommunityAnswer query={query} onService={onService} />,
     school: <SchoolAnswer onService={onService} />,
   }[id];
   return (
@@ -581,35 +596,107 @@ function KAHousingCard({ home, rank, onOpen, compact = false }) {
   );
 }
 
-function CommunityAnswer({ onService }) {
+function CommunityAnswer({ query, onService }) {
+  const communityName = extractCommunityName(query);
   return (
     <>
       <div className="answer-copy">
-        <strong>万科城市花园近半年成交价小幅波动，成交活跃度保持稳定。</strong>
-        <p>近期参考成交价约 34,500 元/㎡，近半年累计模拟成交 53 套。议价空间需要结合具体楼栋、楼层和装修情况判断。</p>
+        <strong>{communityName}的二手房价近期小幅波动，租金整体相对稳定。</strong>
+        <p>当前二手参考成交价约 34,500 元/㎡；主流两房月租约 5,300 元。小区近半年成交活跃度中等，价格和租金需要结合具体户型、楼层与装修判断。</p>
       </div>
-      <InsightCard title="万科城市花园" subtitle="小区成交观察 · 模拟数据">
-        <MetricGrid items={[["参考成交价", "34,500", "元/㎡"], ["近半年成交", "53", "套"], ["在售参考", "62", "套"], ["成交活跃度", "中等", "同板块前 40%"]]} />
-        <ChartHeader title="近半年成交价格" meta="点击节点查看" />
-        <div className="chart-wrap">
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={communityData} margin={{ top: 8, right: 4, left: -22, bottom: 0 }}>
-              <CartesianGrid vertical={false} stroke="#edf1f7" />
-              <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: "#8a94a6", fontSize: 11 }} />
-              <YAxis domain={[33000, 36500]} axisLine={false} tickLine={false} tick={{ fill: "#8a94a6", fontSize: 10 }} />
-              <Tooltip content={<PriceTooltip />} />
-              <Area isAnimationActive={false} type="monotone" dataKey="price" stroke={BLUE} strokeWidth={2.5} fill="url(#blueFill)" dot={{ r: 2, fill: BLUE }} />
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
-      </InsightCard>
+      <CommunityMarketCard communityName={communityName} />
       <ServiceActions title="继续了解这个小区" actions={[
-        { icon: Search, title: "查看在售房源", sub: "按楼栋和面积筛选", type: "buy-listings" },
+        { icon: Search, title: "查看二手房源", sub: "参考价附近共 62 套", type: "community-sale-listings" },
+        { icon: Building2, title: "查看出租房源", sub: "整租、合租共 18 套", type: "community-rent-listings" },
         { icon: Calculator, title: "算一算月供", sub: "以 89㎡ 三房为例", type: "mortgage" },
-        { icon: Navigation, title: "查看生活便利度", sub: "交通、商业与医疗", type: "amenities" },
       ]} onService={onService} />
       <SourceNote />
     </>
+  );
+}
+
+function extractCommunityName(query = "") {
+  const known = ["万科城市花园"];
+  const matchedKnown = known.find((name) => query.includes(name));
+  if (matchedKnown) return matchedKnown;
+  const matched = query.match(/([\u4e00-\u9fa5A-Za-z0-9]{2,14}(?:花园|家园|公馆|小区|苑|府))/);
+  return matched?.[1] || "万科城市花园";
+}
+
+function CommunityMarketCard({ communityName }) {
+  const [tab, setTab] = useState("overview");
+  return (
+    <section className="community-market-card">
+      <div className="community-market-head">
+        <div><strong>{communityName}</strong><span>二手房与租赁市场 · 模拟数据</span></div>
+        <span className="market-update"><Clock3 size={12} />更新至 2026.06.07</span>
+      </div>
+      <div className="market-tabs">
+        {[["overview", "市场总览"], ["sale", "二手房价"], ["rent", "租金行情"]].map(([id, label]) => <button className={tab === id ? "active" : ""} key={id} onClick={() => setTab(id)}>{label}</button>)}
+      </div>
+      {tab === "overview" && <CommunityOverview />}
+      {tab === "sale" && <CommunitySaleTrend />}
+      {tab === "rent" && <CommunityRentTrend />}
+    </section>
+  );
+}
+
+function CommunityOverview() {
+  return (
+    <div className="community-overview">
+      <div className="market-value-grid">
+        <div className="sale-value"><span><Home size={14} />二手参考成交价</span><strong>34,500<small>元/㎡</small></strong><em>近半年约 -2.5%</em></div>
+        <div className="rent-value"><span><Building2 size={14} />主流两房月租</span><strong>5,300<small>元/月</small></strong><em>近半年约 +2.9%</em></div>
+      </div>
+      <div className="market-signal-grid">
+        <div><span>近半年成交</span><strong>53 套</strong><small>活跃度中等</small></div>
+        <div><span>当前在售</span><strong>62 套</strong><small>议价空间需看房源</small></div>
+        <div><span>当前出租</span><strong>18 套</strong><small>两房占比更高</small></div>
+        <div><span>粗略租售比</span><strong>约 1.9%</strong><small>按 89㎡ 两房估算</small></div>
+      </div>
+      <div className="market-insight"><Sparkles size={15} /><div><strong>Agent 解读</strong><span>售价仍处于调整阶段，租金相对稳定。自住用户可重点比较具体房源议价空间；出租回报测算需计入空置、税费和维护成本。</span></div></div>
+    </div>
+  );
+}
+
+function CommunitySaleTrend() {
+  return (
+    <div className="market-trend-panel">
+      <div className="trend-panel-title"><div><strong>近半年二手成交价格</strong><span>参考成交价 · 元/㎡</span></div><b>34,500</b></div>
+      <div className="market-chart">
+        <ResponsiveContainer width="100%" height="100%">
+          <AreaChart data={communityData} margin={{ top: 8, right: 4, left: -22, bottom: 0 }}>
+            <defs><linearGradient id="communitySaleFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor={BLUE} stopOpacity={0.20} /><stop offset="100%" stopColor={BLUE} stopOpacity={0.02} /></linearGradient></defs>
+            <CartesianGrid vertical={false} stroke="#edf1f7" />
+            <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: "#8a94a6", fontSize: 10 }} />
+            <YAxis domain={[33000, 36500]} axisLine={false} tickLine={false} tick={{ fill: "#8a94a6", fontSize: 9 }} />
+            <Tooltip content={<PriceTooltip />} />
+            <Area isAnimationActive={false} type="monotone" dataKey="price" stroke={BLUE} strokeWidth={2.4} fill="url(#communitySaleFill)" dot={{ r: 2, fill: BLUE }} />
+          </AreaChart>
+        </ResponsiveContainer>
+      </div>
+      <div className="market-detail-rows"><div><span>两房参考</span><b>33,600 - 34,800 元/㎡</b></div><div><span>三房参考</span><b>34,200 - 35,800 元/㎡</b></div><div><span>近半年成交</span><b>53 套</b></div></div>
+    </div>
+  );
+}
+
+function CommunityRentTrend() {
+  return (
+    <div className="market-trend-panel">
+      <div className="trend-panel-title"><div><strong>近半年主流两房租金</strong><span>整租参考 · 元/月</span></div><b>5,300</b></div>
+      <div className="market-chart">
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart data={communityRentData} margin={{ top: 8, right: 4, left: -22, bottom: 0 }}>
+            <CartesianGrid vertical={false} stroke="#edf1f7" />
+            <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: "#8a94a6", fontSize: 10 }} />
+            <YAxis domain={[4800, 5500]} axisLine={false} tickLine={false} tick={{ fill: "#8a94a6", fontSize: 9 }} />
+            <Tooltip content={<RentTooltip />} />
+            <Line isAnimationActive={false} type="monotone" dataKey="rent" stroke={BLUE} strokeWidth={2.4} dot={{ r: 2, fill: BLUE }} />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+      <div className="market-detail-rows"><div><span>整租两房</span><b>5,000 - 5,600 元/月</b></div><div><span>整租三房</span><b>6,500 - 7,200 元/月</b></div><div><span>品质合租</span><b>2,800 - 3,500 元/月</b></div></div>
+    </div>
   );
 }
 
@@ -649,6 +736,11 @@ function ChartHeader({ title, meta }) {
 function PriceTooltip({ active, payload, label }) {
   if (!active || !payload?.length) return null;
   return <div className="chart-tooltip"><span>{label}</span>{payload.map((entry) => <strong key={entry.dataKey}>{entry.dataKey === "price" ? "参考价" : entry.dataKey}：{Number(entry.value).toLocaleString()} 元/㎡</strong>)}</div>;
+}
+
+function RentTooltip({ active, payload, label }) {
+  if (!active || !payload?.length) return null;
+  return <div className="chart-tooltip"><span>{label}</span><strong>两房月租：{Number(payload[0].value).toLocaleString()} 元/月</strong></div>;
 }
 
 function Evidence({ text }) {
@@ -730,7 +822,7 @@ function Consent({ onAccept }) {
 
 function ServiceDrawer({ type, onClose }) {
   const drawerType = typeof type === "string" ? type : type.type;
-  const content = drawerType === "mortgage" ? <Mortgage /> : drawerType === "fund" ? <Fund /> : drawerType === "buy-listings" ? <Listings kind="buy" /> : drawerType === "rent-listings" ? <Listings kind="rent" /> : drawerType === "rent-detail" ? <RentDetail home={type.home} /> : <GenericService type={drawerType} />;
+  const content = drawerType === "mortgage" ? <Mortgage /> : drawerType === "fund" ? <Fund /> : drawerType === "buy-listings" ? <Listings kind="buy" /> : drawerType === "rent-listings" ? <Listings kind="rent" /> : drawerType === "community-sale-listings" ? <CommunityListings mode="sale" /> : drawerType === "community-rent-listings" ? <CommunityListings mode="rent" /> : drawerType === "rent-detail" ? <RentDetail home={type.home} /> : <GenericService type={drawerType} />;
   return (
     <div className="drawer-backdrop" onMouseDown={onClose}>
       <section className="service-drawer" onMouseDown={(event) => event.stopPropagation()}>
@@ -779,6 +871,32 @@ function Listings({ kind }) {
         {items.map((item, index) => <button className="listing-item" key={item.title}><span className={`listing-image image-${index + 1}`}><Home size={25} /></span><span className="listing-content"><strong>{item.title}</strong><small>{item.meta}</small><em>{item.tag}</em></span><b>{item.price}</b></button>)}
       </div>
       <button className="primary-wide">进入房源服务查看更多<ArrowRight size={17} /></button>
+    </>
+  );
+}
+
+function CommunityListings({ mode }) {
+  const [active, setActive] = useState(mode);
+  const homes = communityHomes[active];
+  return (
+    <>
+      <div className="drawer-title"><span>万科城市花园房源</span><small>与小区市场卡片联动 · 模拟房源</small></div>
+      <div className="community-listing-tabs"><button className={active === "sale" ? "active" : ""} onClick={() => setActive("sale")}>二手在售 62</button><button className={active === "rent" ? "active" : ""} onClick={() => setActive("rent")}>当前出租 18</button></div>
+      <div className="community-listing-summary">
+        <div><span>{active === "sale" ? "二手参考价" : "主流两房租金"}</span><strong>{active === "sale" ? "34,500 元/㎡" : "5,300 元/月"}</strong></div>
+        <small>{active === "sale" ? "以下房源按单价接近参考价排序" : "以下房源按户型与租金匹配度排序"}</small>
+      </div>
+      <div className="community-home-list">
+        {homes.map((home) => (
+          <button className="community-home-card" key={home.title}>
+            <span className="community-home-image" style={{ backgroundImage: `url(${home.image})` }}><em>{home.tag}</em></span>
+            <span className="community-home-copy"><strong>{home.title}</strong><small>{home.meta}</small><span>{home.unit}</span></span>
+            <b>{home.price}<ChevronRight size={14} /></b>
+          </button>
+        ))}
+      </div>
+      <button className="primary-wide">{active === "sale" ? "查看全部二手房源" : "查看全部出租房源"}<ArrowRight size={17} /></button>
+      <p className="drawer-footnote">房源及价格为 Demo 模拟数据，实际信息以合作平台为准。</p>
     </>
   );
 }
