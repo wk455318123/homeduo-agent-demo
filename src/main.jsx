@@ -126,12 +126,12 @@ const communityRentData = [
 ];
 
 const prompts = [
-  { id: "trend", label: "杭州最近房价什么走势？", icon: TrendingDown },
-  { id: "budget", label: "300万预算，余杭和萧山怎么选？", icon: WalletCards },
-  { id: "rent", label: "我想在杭州租房，帮我找找", icon: Building2 },
-  { id: "community", label: "万科城市花园二手房价和租金？", icon: Home },
-  { id: "affordable", label: "我能申请杭州保租房或人才房吗？", icon: ShieldCheck },
-  { id: "school", label: "万科城市花园学区怎么样？", icon: CircleHelp },
+  { id: "trend", label: "杭州最近房价什么走势？", sub: "查看城市价格趋势与市场变化", icon: TrendingDown },
+  { id: "budget", label: "300万预算，余杭和萧山怎么选？", sub: "预算选区", icon: WalletCards },
+  { id: "rent", label: "我想在杭州租房，帮我找找", sub: "多平台租房", icon: Building2 },
+  { id: "affordable", label: "我能申请杭州保租房或人才房吗？", sub: "政策住房", icon: ShieldCheck },
+  { id: "community", label: "万科城市花园二手房价和租金？", sub: "小区行情", icon: Home },
+  { id: "school", label: "万科城市花园学区怎么样？", sub: "入学政策", icon: CircleHelp },
 ];
 
 const suggestions = {
@@ -484,27 +484,41 @@ function Header({ onService, onReset }) {
 }
 
 function Welcome({ onAsk, onService }) {
+  const featuredPrompt = prompts[0];
+  const quickPrompts = prompts.slice(1, 4);
+  const FeaturedIcon = featuredPrompt.icon;
   return (
     <div className="welcome">
-      <div className="welcome-orbit"><div className="welcome-home"><Home size={28} /></div></div>
-      <p className="eyebrow">支付宝房产服务助手</p>
-      <h1>关于杭州的房子，<br />从了解开始，一路帮你办。</h1>
-      <p className="welcome-copy">问趋势、选区域、找房源，也可以继续查政策住房、算月供、提公积金和办理租房服务。</p>
-      <div className="prompt-grid">
-        {prompts.map(({ id, label, icon: Icon }) => (
-          <button key={id} onClick={() => onAsk(label, id)} className="prompt-card">
-            <span className="prompt-icon"><Icon size={18} /></span>
-            <span>{label}</span>
-            <ChevronRight size={16} />
-          </button>
-        ))}
-      </div>
-      <div className="welcome-services">
-        <button onClick={() => onService("buy-listings")}><Search size={17} />找房源</button>
-        <button onClick={() => onService("affordable-projects")}><ShieldCheck size={17} />政策住房</button>
-        <button onClick={() => onService("mortgage")}><Calculator size={17} />算月供</button>
-        <button onClick={() => onService("fund")}><Landmark size={17} />查公积金</button>
-      </div>
+      <section className="welcome-hero">
+        <p className="eyebrow"><Sparkles size={14} />支付宝房产服务助手</p>
+        <h1>杭州的房子，<br />从哪里开始了解？</h1>
+        <p className="welcome-copy">问行情、找房源，也可以继续办理公积金与政策住房服务。</p>
+      </section>
+      <section className="welcome-discovery">
+        <button className="featured-prompt" onClick={() => onAsk(featuredPrompt.label, featuredPrompt.id)}>
+          <span className="featured-prompt-icon"><FeaturedIcon size={21} /></span>
+          <span><small>今日推荐问题</small><strong>{featuredPrompt.label}</strong><em>{featuredPrompt.sub}</em></span>
+          <ArrowRight size={18} />
+        </button>
+        <div className="quick-prompt-list">
+          {quickPrompts.map(({ id, label, sub, icon: Icon }) => (
+            <button key={id} onClick={() => onAsk(label, id)} className="quick-prompt">
+              <span className="prompt-icon"><Icon size={17} /></span>
+              <span><small>{sub}</small><strong>{label}</strong></span>
+              <ChevronRight size={15} />
+            </button>
+          ))}
+        </div>
+      </section>
+      <section className="welcome-service-section">
+        <div className="welcome-section-title"><strong>常用服务</strong><span>在支付宝里继续办理</span></div>
+        <div className="welcome-services">
+          <button onClick={() => onService("buy-listings")}><span><Search size={18} /></span><strong>找房源</strong></button>
+          <button onClick={() => onService("affordable-projects")}><span><ShieldCheck size={18} /></span><strong>政策住房</strong></button>
+          <button onClick={() => onService("mortgage")}><span><Calculator size={18} /></span><strong>算月供</strong></button>
+          <button onClick={() => onService("fund")}><span><Landmark size={18} /></span><strong>查公积金</strong></button>
+        </div>
+      </section>
     </div>
   );
 }

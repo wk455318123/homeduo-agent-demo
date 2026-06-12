@@ -101,44 +101,37 @@ body { margin: 0; min-width: 320px; min-height: 100vh; overflow: hidden; }
   min-height: 100%;
   max-width: 640px;
   margin: 0 auto;
-  padding: 48px 30px 60px;
+  padding: 42px 30px 56px;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  text-align: center;
+  align-items: stretch;
 }
-.welcome-orbit {
-  width: 66px; height: 66px; border-radius: 50%;
-  border: 1px solid #cfe2ff;
-  padding: 7px;
-  box-shadow: 0 0 0 7px #eef5ff, 0 10px 30px rgba(22,119,255,.12);
-}
-.welcome-home { width: 100%; height: 100%; border-radius: 50%; background: #1677ff; display: grid; place-items: center; color: #fff; }
-.eyebrow { color: #1677ff; font-size: 12px; font-weight: 700; margin: 24px 0 7px; }
-.welcome h1 { font-size: 28px; line-height: 1.35; letter-spacing: 0; margin: 0; color: #17233d; }
-.welcome-copy { max-width: 480px; color: #66748a; line-height: 1.7; font-size: 13px; margin: 12px 0 25px; }
-.prompt-grid { width: 100%; display: grid; grid-template-columns: 1fr 1fr; gap: 9px; text-align: left; }
-.prompt-card {
-  min-height: 62px;
-  border: 1px solid #e3e9f1;
-  border-radius: 8px;
-  background: #fff;
-  padding: 11px;
-  display: grid;
-  grid-template-columns: 30px 1fr 16px;
-  align-items: center;
-  gap: 8px;
-  color: #344158;
-  font-size: 12px;
-  line-height: 1.45;
-  transition: .18s ease;
-}
-.prompt-card:hover { border-color: #9bc5ff; transform: translateY(-1px); box-shadow: 0 7px 20px rgba(37,67,112,.08); }
+.welcome-hero { padding: 3px 2px 0; text-align: left; }
+.eyebrow { color: #1677ff; display: flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 700; margin: 0 0 10px; }
+.welcome h1 { font-size: 29px; line-height: 1.32; letter-spacing: 0; margin: 0; color: #17233d; }
+.welcome-copy { max-width: 480px; color: #66748a; line-height: 1.7; font-size: 12px; margin: 11px 0 0; }
+.welcome-discovery { margin-top: 26px; }
+.featured-prompt { width: 100%; min-height: 82px; border: 1px solid #cfe2ff; border-radius: 8px; background: #f2f7ff; padding: 13px; display: grid; grid-template-columns: 38px 1fr 20px; align-items: center; gap: 10px; text-align: left; color: #1677ff; }
+.featured-prompt-icon { width: 38px; height: 38px; border-radius: 8px; background: #1677ff; color: #fff; display: grid; place-items: center; }
+.featured-prompt > span:nth-child(2) { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.featured-prompt small { color: #1677ff; font-size: 8px; font-weight: 700; }
+.featured-prompt strong { color: #26364d; font-size: 13px; line-height: 1.45; }
+.featured-prompt em { color: #8390a3; font-size: 9px; font-style: normal; }
+.quick-prompt-list { display: flex; flex-direction: column; margin-top: 8px; border: 1px solid #e4eaf1; border-radius: 8px; background: #fff; overflow: hidden; }
+.quick-prompt { min-height: 58px; padding: 8px 11px; border-bottom: 1px solid #edf1f5; background: #fff; display: grid; grid-template-columns: 30px 1fr 16px; align-items: center; gap: 8px; text-align: left; }
+.quick-prompt:last-child { border-bottom: 0; }
+.quick-prompt > span:nth-child(2) { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.quick-prompt small { color: #8c97a8; font-size: 8px; }
+.quick-prompt strong { color: #344158; font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .prompt-icon { width: 29px; height: 29px; border-radius: 7px; background: #edf5ff; color: #1677ff; display: grid; place-items: center; }
-.prompt-card:last-child { grid-column: span 2; }
-.welcome-services { display: flex; gap: 6px; margin-top: 16px; }
-.welcome-services button { background: transparent; color: #6d788a; display: flex; align-items: center; gap: 5px; padding: 7px 9px; font-size: 11px; }
-.welcome-services button:hover { color: #1677ff; }
+.welcome-service-section { margin-top: 22px; }
+.welcome-section-title { display: flex; align-items: center; margin-bottom: 9px; padding: 0 2px; }
+.welcome-section-title strong { font-size: 12px; }
+.welcome-section-title span { margin-left: auto; color: #9aa4b3; font-size: 8px; }
+.welcome-services { display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px; }
+.welcome-services button { min-height: 66px; border: 1px solid #e5eaf1; border-radius: 7px; background: #fff; color: #1677ff; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; padding: 7px 4px; }
+.welcome-services button span { width: 29px; height: 29px; border-radius: 7px; background: #f0f6ff; display: grid; place-items: center; }
+.welcome-services button strong { color: #56647a; font-size: 9px; font-weight: 600; }
 
 .thread { max-width: 660px; margin: 0 auto; padding: 20px 18px 34px; }
 .mini-intro { display: flex; align-items: center; gap: 8px; color: #758196; font-size: 11px; margin-bottom: 17px; }
@@ -770,14 +763,17 @@ body { margin: 0; min-width: 320px; min-height: 100vh; overflow: hidden; }
   .header-title span { font-size: 8px; }
   .header-title strong { font-size: 13px; }
   .agent-logo { width: 31px; height: 31px; }
-  .welcome { padding: 30px 14px 28px; justify-content: flex-start; }
-  .welcome-orbit { width: 56px; height: 56px; }
-  .eyebrow { margin-top: 18px; font-size: 10px; }
-  .welcome h1 { font-size: 24px; }
-  .welcome-copy { font-size: 11px; margin-bottom: 20px; }
-  .prompt-grid { grid-template-columns: 1fr; gap: 7px; }
-  .prompt-card, .prompt-card:last-child { grid-column: span 1; min-height: 55px; }
-  .welcome-services { margin-top: 11px; }
+  .welcome { padding: 26px 14px 24px; justify-content: flex-start; }
+  .eyebrow { margin-bottom: 9px; font-size: 10px; }
+  .welcome h1 { font-size: 25px; }
+  .welcome-copy { font-size: 11px; margin-top: 9px; }
+  .welcome-discovery { margin-top: 22px; }
+  .featured-prompt { min-height: 78px; padding: 11px; }
+  .featured-prompt strong { font-size: 12px; }
+  .quick-prompt { min-height: 54px; }
+  .welcome-service-section { margin-top: 18px; }
+  .welcome-services { margin-top: 0; gap: 6px; }
+  .welcome-services button { min-height: 62px; }
   .thread { padding: 15px 10px 25px; }
   .mini-intro { font-size: 9px; }
   .answer-row { grid-template-columns: 24px minmax(0, 1fr); gap: 6px; margin-bottom: 24px; }
