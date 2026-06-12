@@ -626,10 +626,125 @@ body { margin: 0; min-width: 320px; min-height: 100vh; overflow: hidden; }
 .generic-grid div { background: #f6f8fb; border-radius: 6px; padding: 10px; display: flex; flex-direction: column; gap: 4px; }
 .generic-grid span { color: #8894a6; font-size: 8px; }
 .generic-grid strong { font-size: 11px; }
+.partner-logo.multi { background: #1677ff; }
+.full-backdrop { padding: 18px; place-items: center; }
+.service-drawer.full-service-page { width: min(1220px, 100%); height: min(900px, calc(100dvh - 36px)); max-height: none; border-radius: 10px; padding: 0; overflow: hidden; }
+.full-service-page .drawer-close { top: 14px; right: 17px; background: #eef2f7; }
+.rental-marketplace { height: 100%; overflow-y: auto; background: #f5f7fa; color: #26354b; }
+.marketplace-header { min-height: 68px; position: sticky; top: 0; z-index: 2; border-bottom: 1px solid #e5eaf1; background: rgba(255,255,255,.98); padding: 11px 94px 11px 20px; display: grid; grid-template-columns: 220px minmax(280px, 520px) auto; gap: 16px; align-items: center; }
+.marketplace-title { display: flex; align-items: center; gap: 8px; }
+.marketplace-title > div { display: flex; flex-direction: column; gap: 2px; }
+.marketplace-title strong { font-size: 17px; }
+.marketplace-title small { color: #8491a3; font-size: 8px; }
+.marketplace-search { height: 39px; border: 1px solid #cfd9e6; border-radius: 6px; background: #f8fafc; padding: 0 10px; display: flex; align-items: center; gap: 7px; color: #1677ff; }
+.marketplace-search input { width: 100%; border: 0; outline: 0; background: transparent; color: #344158; font-size: 10px; }
+.marketplace-agent { justify-self: end; min-height: 36px; border-radius: 6px; background: #1677ff; color: #fff; padding: 0 12px; display: flex; align-items: center; gap: 5px; font-size: 9px; font-weight: 700; }
+.marketplace-source-bar, .marketplace-filters, .marketplace-toolbar { background: #fff; border-bottom: 1px solid #e8edf3; padding: 12px 20px; }
+.marketplace-source-bar { display: grid; grid-template-columns: 190px 1fr; align-items: center; gap: 14px; }
+.marketplace-source-bar > div { display: flex; flex-direction: column; gap: 3px; }
+.marketplace-source-bar strong { font-size: 11px; }
+.marketplace-source-bar span { color: #8792a4; font-size: 8px; }
+.marketplace-source-bar nav { display: flex; gap: 6px; overflow-x: auto; }
+.marketplace-source-bar nav button { min-height: 32px; border: 1px solid #e0e7ef; border-radius: 5px; background: #fff; color: #5f6e83; padding: 0 10px; display: flex; align-items: center; gap: 5px; white-space: nowrap; font-size: 8px; }
+.marketplace-source-bar nav button small { min-width: 17px; height: 17px; border-radius: 9px; background: #f0f3f7; display: grid; place-items: center; color: #7d899a; font-size: 7px; }
+.marketplace-source-bar nav button.active { border-color: #8bbcff; background: #edf5ff; color: #1677ff; }
+.filter-primary { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
+.filter-primary button, .marketplace-toolbar > button { min-height: 31px; border: 1px solid #e0e7ef; border-radius: 5px; background: #fff; color: #5e6c81; padding: 0 9px; display: flex; align-items: center; gap: 4px; font-size: 8px; }
+.filter-primary button.active { border-color: #9bc4ff; background: #eef6ff; color: #1677ff; }
+.filter-primary button.clear-filters { border-color: transparent; color: #1677ff; }
+.filter-more { border-top: 1px solid #edf1f5; margin-top: 10px; padding-top: 10px; display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
+.filter-more > span { color: #6c7a8f; font-size: 8px; font-weight: 700; margin-right: 5px; }
+.filter-more button { min-height: 27px; border-radius: 5px; background: #f3f6f9; color: #647287; padding: 0 8px; font-size: 8px; }
+.filter-more button.active { background: #edf5ff; color: #1677ff; box-shadow: inset 0 0 0 1px #acd0ff; }
+.marketplace-toolbar { display: grid; grid-template-columns: 1fr auto auto auto; align-items: center; gap: 12px; }
+.marketplace-toolbar > div:first-child { display: flex; flex-direction: column; gap: 2px; }
+.marketplace-toolbar strong { font-size: 11px; }
+.marketplace-toolbar span { color: #8b96a7; font-size: 8px; }
+.marketplace-trust { color: #1677ff; display: flex; align-items: center; gap: 4px; font-size: 8px; }
+.view-switch { height: 32px; border-radius: 5px; background: #f0f3f7; padding: 3px; display: flex; gap: 2px; }
+.view-switch button { border-radius: 4px; background: transparent; color: #718096; padding: 0 7px; display: flex; align-items: center; gap: 3px; font-size: 8px; }
+.view-switch button.active { background: #fff; color: #1677ff; box-shadow: 0 1px 4px rgba(40,55,75,.08); }
+.rental-marketplace > .action-feedback { margin: 9px 20px 0; }
+.marketplace-grid { padding: 16px 20px 20px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.marketplace-home-card { border: 1px solid #e2e8f0; border-radius: 7px; background: #fff; overflow: hidden; }
+.marketplace-home-card:hover { border-color: #9dc7ff; box-shadow: 0 7px 20px rgba(38,68,105,.08); }
+.marketplace-home-image { width: 100%; height: 154px; background-size: cover; background-position: center; position: relative; display: block; text-align: left; }
+.marketplace-home-image::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(15,25,38,.08), rgba(15,25,38,.25)); }
+.marketplace-home-image span, .marketplace-home-image em { position: absolute; z-index: 1; color: #fff; font-style: normal; }
+.marketplace-home-image span { top: 8px; left: 8px; border-radius: 4px; background: #1677ff; padding: 3px 6px; font-size: 8px; font-weight: 700; }
+.marketplace-home-image em { left: 8px; bottom: 8px; font-size: 7px; }
+.marketplace-home-content { padding: 10px; }
+.marketplace-home-top { display: grid; grid-template-columns: 1fr 25px; gap: 6px; }
+.marketplace-home-top > button:first-child { min-width: 0; background: transparent; text-align: left; display: flex; flex-direction: column; gap: 3px; }
+.marketplace-home-top strong { font-size: 11px; }
+.marketplace-home-top small { color: #8792a3; font-size: 8px; }
+.marketplace-home-top > button:last-child { color: #9aa5b4; background: transparent; display: grid; place-items: center; }
+.marketplace-home-top > button.saved { color: #1677ff; }
+.marketplace-home-top > button.saved svg { fill: #1677ff; }
+.marketplace-commute { margin-top: 7px; color: #5f6d82; display: flex; align-items: center; gap: 3px; font-size: 8px; }
+.marketplace-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 7px; }
+.marketplace-tags i { border-radius: 3px; background: #eef4fb; color: #526c8d; padding: 3px 5px; font-style: normal; font-size: 7px; }
+.marketplace-card-foot { border-top: 1px solid #edf1f5; margin-top: 9px; padding-top: 8px; display: flex; align-items: center; gap: 6px; }
+.marketplace-card-foot > span { color: #8b96a7; display: flex; align-items: center; gap: 3px; font-size: 7px; }
+.marketplace-card-foot > strong { margin-left: auto; color: #1677ff; font-size: 14px; }
+.marketplace-card-foot strong small { color: #8792a3; font-size: 7px; margin-left: 2px; }
+.marketplace-open { width: 100%; min-height: 31px; border-radius: 5px; background: #f3f7fc; color: #1677ff; margin-top: 8px; display: flex; align-items: center; justify-content: center; gap: 3px; font-size: 8px; }
+.marketplace-empty { grid-column: 1 / -1; min-height: 230px; border: 1px dashed #d7e0ea; border-radius: 8px; color: #8a96a7; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 7px; }
+.marketplace-empty strong { color: #46556b; font-size: 11px; }
+.marketplace-empty span { font-size: 8px; }
+.marketplace-map-layout { height: 560px; padding: 14px 20px; display: grid; grid-template-columns: 1fr 320px; gap: 12px; }
+.marketplace-map { border: 1px solid #dce4ed; border-radius: 8px; background: #eaf1ed; position: relative; overflow: hidden; }
+.map-road { position: absolute; background: #fff; box-shadow: 0 0 0 1px #dce4e8; transform: rotate(-18deg); }
+.road-one { width: 120%; height: 22px; left: -10%; top: 42%; }
+.road-two { width: 80%; height: 16px; left: 18%; top: 20%; transform: rotate(57deg); }
+.map-water { position: absolute; width: 100%; height: 75px; left: 0; bottom: 8%; background: #c9e4ef; transform: rotate(8deg); }
+.map-marker { position: absolute; z-index: 1; min-width: 52px; border-radius: 18px; background: #1677ff; color: #fff; padding: 5px 7px; box-shadow: 0 4px 10px rgba(22,119,255,.24); display: flex; flex-direction: column; align-items: center; }
+.map-marker strong { font-size: 9px; }
+.map-marker span { font-size: 6px; }
+.map-result-list { border: 1px solid #e1e7ef; border-radius: 8px; background: #fff; padding: 7px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; }
+.map-result-list > button { min-height: 75px; border: 1px solid #edf1f5; border-radius: 6px; background: #fff; padding: 5px; display: grid; grid-template-columns: 74px 1fr auto; align-items: center; gap: 7px; text-align: left; }
+.map-result-image { width: 74px; height: 62px; border-radius: 5px; background-size: cover; background-position: center; }
+.map-result-list button > span:nth-child(2) { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.map-result-list strong { font-size: 9px; }
+.map-result-list small { color: #8b96a7; font-size: 7px; }
+.map-result-list b { color: #1677ff; font-size: 10px; white-space: nowrap; }
+.map-result-list b small { display: block; text-align: right; }
+.marketplace-footnote { padding: 0 20px 17px; color: #98a2af; text-align: center; font-size: 7px; }
+.marketplace-detail { min-height: 100%; background: #f5f7fa; padding: 18px 22px 28px; }
+.marketplace-detail > .detail-back { margin-bottom: 11px; }
+.marketplace-detail-layout { display: grid; grid-template-columns: minmax(0, 1fr) 310px; gap: 15px; }
+.marketplace-detail-main, .marketplace-detail-aside { border: 1px solid #e1e7ef; border-radius: 8px; background: #fff; padding: 13px; }
+.marketplace-detail-hero { height: 340px; border-radius: 7px; background-size: cover; background-position: center; position: relative; }
+.marketplace-detail-hero span, .marketplace-detail-hero em { position: absolute; color: #fff; border-radius: 4px; padding: 4px 7px; font-style: normal; font-size: 8px; }
+.marketplace-detail-hero span { left: 10px; top: 10px; background: #1677ff; }
+.marketplace-detail-hero em { right: 10px; top: 10px; background: rgba(28,39,54,.6); }
+.marketplace-detail-title { padding: 12px 1px 6px; display: flex; align-items: center; gap: 10px; }
+.marketplace-detail-title > div { display: flex; flex-direction: column; gap: 3px; }
+.marketplace-detail-title strong { font-size: 16px; }
+.marketplace-detail-title span { color: #8491a3; font-size: 9px; }
+.marketplace-detail-title b { margin-left: auto; color: #1677ff; font-size: 20px; }
+.marketplace-detail-title b small { color: #8491a3; font-size: 8px; margin-left: 2px; }
+.marketplace-detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin: 12px 0; }
+.marketplace-detail-grid > div { min-height: 72px; border-radius: 6px; background: #f5f8fc; padding: 9px; color: #1677ff; display: grid; grid-template-columns: 21px 1fr; gap: 6px; }
+.marketplace-detail-grid span { display: flex; flex-direction: column; gap: 3px; }
+.marketplace-detail-grid strong { color: #344158; font-size: 9px; }
+.marketplace-detail-grid small { color: #8491a3; font-size: 8px; line-height: 1.5; }
+.marketplace-detail-aside { height: fit-content; position: sticky; top: 18px; }
+.source-disclosure { border-radius: 7px; background: #f3f8ff; padding: 10px; display: grid; grid-template-columns: 40px 1fr; align-items: center; gap: 8px; }
+.source-disclosure div { display: flex; flex-direction: column; gap: 3px; }
+.source-disclosure strong { font-size: 10px; }
+.source-disclosure small { color: #8491a3; font-size: 8px; }
+.source-rules { margin: 12px 0; border: 1px solid #e5eaf1; border-radius: 7px; overflow: hidden; }
+.source-rules span { min-height: 46px; border-bottom: 1px solid #edf1f5; padding: 7px 9px; display: flex; flex-direction: column; gap: 3px; }
+.source-rules span:last-child { border-bottom: 0; }
+.source-rules b { font-size: 9px; }
+.source-rules em { color: #8995a6; font-size: 8px; font-style: normal; line-height: 1.45; }
 
 @media (max-width: 980px) {
   .app-shell { grid-template-columns: minmax(500px, 760px) 280px; }
   .desktop-nav { display: none; }
+  .marketplace-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .marketplace-header { grid-template-columns: 180px 1fr auto; }
 }
 
 @media (max-width: 760px) {
@@ -688,6 +803,34 @@ body { margin: 0; min-width: 320px; min-height: 100vh; overflow: hidden; }
   .bottom-nav button.active { color: #1677ff; }
   .consent-card { padding: 21px; }
   .service-drawer { max-height: 88dvh; }
+  .full-backdrop { padding: 0; }
+  .service-drawer.full-service-page { width: 100%; height: 100dvh; max-height: none; border-radius: 0; }
+  .full-service-page .drawer-close { top: 13px; right: 9px; }
+  .marketplace-header { min-height: 116px; padding: 9px 70px 9px 10px; position: relative; grid-template-columns: 1fr; gap: 7px; }
+  .marketplace-title { min-height: 34px; }
+  .marketplace-agent { position: absolute; right: 70px; top: 10px; min-height: 30px; padding: 0 7px; }
+  .marketplace-source-bar { grid-template-columns: 1fr; gap: 8px; padding: 10px; }
+  .marketplace-source-bar nav { padding-bottom: 2px; }
+  .marketplace-filters { padding: 9px 10px; }
+  .filter-primary { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 2px; }
+  .filter-primary button { white-space: nowrap; }
+  .filter-more { max-height: 72px; overflow-y: auto; }
+  .marketplace-toolbar { padding: 9px 10px; grid-template-columns: 1fr auto auto; gap: 6px; }
+  .marketplace-trust { display: none; }
+  .marketplace-grid { padding: 10px; grid-template-columns: 1fr; gap: 9px; }
+  .marketplace-home-card { display: grid; grid-template-columns: 122px 1fr; }
+  .marketplace-home-image { height: 100%; min-height: 176px; }
+  .marketplace-home-content { padding: 8px; }
+  .marketplace-open { display: none; }
+  .marketplace-card-foot > span { display: none; }
+  .marketplace-map-layout { height: calc(100dvh - 300px); padding: 8px; grid-template-columns: 1fr; }
+  .map-result-list { display: none; }
+  .marketplace-footnote { padding: 0 10px 12px; }
+  .marketplace-detail { padding: 12px 9px 25px; }
+  .marketplace-detail-layout { grid-template-columns: 1fr; }
+  .marketplace-detail-hero { height: 230px; }
+  .marketplace-detail-aside { position: static; }
+  .marketplace-detail-grid { grid-template-columns: 1fr; }
   .listing-item { grid-template-columns: 55px 1fr auto; }
   .listing-image { width: 55px; height: 50px; }
 }
