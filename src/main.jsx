@@ -62,33 +62,41 @@ import {
   YAxis,
 } from "recharts";
 import { extractCommunityName, identifyPrompt } from "./intent.js";
+import { matchAffordableProjects } from "./policyMatching.js";
+import { resolveCommunityContext } from "./conversationContext.js";
 import "./styles.css";
 
 const BLUE = "#1677ff";
 const LIGHT_BLUE = "#69a9ff";
 const INK = "#17233d";
+const DATA_UPDATED_DATE = new Intl.DateTimeFormat("zh-CN", {
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+}).format(new Date()).replaceAll("/", ".");
+const DATA_UPDATED_SHORT = `${new Date().getMonth() + 1}月${new Date().getDate()}日`;
 
 const trendData = [
   { month: "7月", price: 26890 },
-  { month: "8月", price: 26750 },
-  { month: "9月", price: 26540 },
-  { month: "10月", price: 26420 },
-  { month: "11月", price: 26280 },
-  { month: "12月", price: 26190 },
-  { month: "1月", price: 26080 },
-  { month: "2月", price: 26010 },
-  { month: "3月", price: 25950 },
-  { month: "4月", price: 25890 },
-  { month: "5月", price: 25920 },
+  { month: "8月", price: 26720 },
+  { month: "9月", price: 26780 },
+  { month: "10月", price: 26490 },
+  { month: "11月", price: 26540 },
+  { month: "12月", price: 26210 },
+  { month: "1月", price: 26320 },
+  { month: "2月", price: 26040 },
+  { month: "3月", price: 26110 },
+  { month: "4月", price: 25870 },
+  { month: "5月", price: 25960 },
   { month: "6月", price: 25765 },
 ];
 
 const compareData = [
   { month: "1月", 余杭: 32800, 萧山: 30200 },
-  { month: "2月", 余杭: 32500, 萧山: 30100 },
-  { month: "3月", 余杭: 32300, 萧山: 29900 },
-  { month: "4月", 余杭: 32000, 萧山: 29600 },
-  { month: "5月", 余杭: 31900, 萧山: 29500 },
+  { month: "2月", 余杭: 32500, 萧山: 30300 },
+  { month: "3月", 余杭: 32650, 萧山: 29950 },
+  { month: "4月", 余杭: 32050, 萧山: 30100 },
+  { month: "5月", 余杭: 32120, 萧山: 29550 },
   { month: "6月", 余杭: 31600, 萧山: 29300 },
 ];
 
@@ -385,9 +393,8 @@ function App() {
     if (!text.trim() || loading) return;
     const recognizedId = identifyPrompt(text);
     const id = recognizedId === "community" ? "community" : explicitId || recognizedId;
-    const detectedCommunity = ["community", "school", "listings", "amenities"].includes(id) ? extractCommunityName(text) : "";
-    const resolvedCommunity = detectedCommunity || communityContext || "该小区";
-    if (detectedCommunity) setCommunityContext(detectedCommunity);
+    const { communityName: resolvedCommunity, nextCommunityContext } = resolveCommunityContext(id, text, communityContext, extractCommunityName);
+    setCommunityContext(nextCommunityContext);
     setMessages((prev) => [...prev, { role: "user", text }]);
     setInput("");
     setLoading(true);
@@ -395,7 +402,7 @@ function App() {
       setMessages((prev) => [...prev, { role: "agent", id, query: text, communityName: resolvedCommunity }]);
       setLoading(false);
       setJourney((prev) => (prev.includes("获得分析") ? prev : [...prev, "获得分析"]));
-    }, 760);
+    }, 900);
   };
 
   const openService = (type) => {
@@ -429,7 +436,7 @@ function App() {
                 message.role === "user" ? (
                   <UserMessage key={index} text={message.text} />
                 ) : (
-                  <AgentAnswer key={index} id={message.id} query={message.query} communityName={message.communityName} onAsk={ask} onService={openService} />
+                  <AgentAnswer key={index} animate={index === messages.length - 1} id={message.id} query={message.query} communityName={message.communityName} onAsk={ask} onService={openService} />
                 )
               )}
               {loading && <LoadingAnswer />}
@@ -511,18 +518,27 @@ function UserMessage({ text }) {
 }
 
 function LoadingAnswer() {
+  const [stage, setStage] = useState(0);
+  const stages = ["识别问题意图", "调用模拟 MCP 数据", "完成内容风控与回答组装"];
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setStage((current) => Math.min(current + 1, stages.length - 1)), 280);
+    return () => window.clearInterval(timer);
+  }, []);
+
   return (
     <div className="answer-row">
       <AgentMark />
-      <div className="thinking">
+      <div className="thinking pipeline-thinking">
         <div className="dots"><i /><i /><i /></div>
-        <span>正在理解问题并调用趋势数据…</span>
+        <span>{stages[stage]}</span>
+        <small>{stage + 1}/{stages.length}</small>
       </div>
     </div>
   );
 }
 
-function AgentAnswer({ id, query, communityName, onAsk, onService }) {
+function AgentAnswer({ id, query, communityName, onAsk, onService, animate = false }) {
   const unsupportedPlace = Object.entries({
     上海: /上海|浦东|闵行/,
     北京: /北京|朝阳|海淀/,
@@ -549,12 +565,13 @@ function AgentAnswer({ id, query, communityName, onAsk, onService }) {
     "policy-projects": <ServiceQueryAnswer id={id} query={query} communityName={communityName} onService={onService} />,
     "policy-materials": <ServiceQueryAnswer id={id} query={query} communityName={communityName} onService={onService} />,
     "policy-progress": <ServiceQueryAnswer id={id} query={query} communityName={communityName} onService={onService} />,
+    fallback: <FallbackAnswer query={query} onAsk={onAsk} onService={onService} />,
   }[id];
   const followups = unsupportedPlace ? [] : suggestions[id] || [];
   return (
     <div className="answer-row">
       <AgentMark />
-      <div className="answer-stack">
+      <div className={`answer-stack ${animate ? "streaming" : ""}`}>
         {content}
         {followups.length > 0 && <div className="followups">
           <span>继续问</span>
@@ -569,6 +586,28 @@ function AgentAnswer({ id, query, communityName, onAsk, onService }) {
         </div>}
       </div>
     </div>
+  );
+}
+
+function FallbackAnswer({ query, onAsk, onService }) {
+  return (
+    <>
+      <div className="answer-copy boundary">
+        <div className="boundary-label"><CircleHelp size={16} />我还需要更具体一点</div>
+        <strong>“{query}”涉及判断或信息范围较宽，当前 Demo 不会直接给出笼统结论。</strong>
+        <p>你可以从房价趋势、预算选区、具体小区、租房或政策住房开始，我会基于已配置的数据和服务继续回答。</p>
+      </div>
+      <ServiceActions title="可以这样问" actions={[
+        { icon: TrendingDown, title: "杭州最近房价走势", sub: "查看城市级趋势数据", type: "trend-question" },
+        { icon: Building2, title: "帮我在杭州租房", sub: "按通勤与预算匹配", type: "rent-question" },
+        { icon: ShieldCheck, title: "我能申请保租房吗", sub: "进行政策住房预匹配", type: "affordable-question" },
+      ]} onService={(type) => {
+        if (type === "trend-question") onAsk("杭州最近房价什么走势？");
+        else if (type === "rent-question") onAsk("我想在杭州租房，帮我找找");
+        else if (type === "affordable-question") onAsk("我能申请杭州保租房或人才房吗？");
+        else onService(type);
+      }} />
+    </>
   );
 }
 
@@ -609,9 +648,9 @@ function TrendAnswer({ query, onService }) {
     <>
       <div className="answer-copy">
         <strong>杭州房价近一年整体温和下行，近期仍处于调整阶段。</strong>
-        <p>截至 6 月 7 日，杭州参考均价约为 25,765 元/㎡。近一个月变化约 -0.6%，不同板块分化明显，建议结合预算与自住需求看具体区域。</p>
+        <p>截至 {DATA_UPDATED_SHORT}，杭州参考均价约为 25,765 元/㎡。近一个月变化约 -0.6%，不同板块分化明显，建议结合预算与自住需求看具体区域。</p>
       </div>
-      <InsightCard title="杭州房产趋势" subtitle="更新至 2026.06.07">
+      <InsightCard title="杭州房产趋势" subtitle={`更新至 ${DATA_UPDATED_DATE}`}>
         <MetricGrid items={[["参考均价", "25,765", "元/㎡"], ["近一月", "-0.6%", "温和调整"], ["近一年", "-8.4%", "历史变化"], ["趋势温度", "寒", "强度 44"]]} />
         <ChartHeader title="近一年价格趋势" meta="单位：元/㎡" />
         <div className="chart-wrap">
@@ -928,7 +967,7 @@ function CommunityMarketCard({ communityName }) {
     <section className="community-market-card">
       <div className="community-market-head">
         <div><strong>{communityName}</strong><span>二手房与租赁市场 · 模拟数据</span></div>
-        <span className="market-update"><Clock3 size={12} />更新至 2026.06.07</span>
+        <span className="market-update"><Clock3 size={12} />更新至 {DATA_UPDATED_DATE}</span>
       </div>
       <div className="market-tabs">
         {[["overview", "市场总览"], ["sale", "二手房价"], ["rent", "租金行情"]].map(([id, label]) => <button className={tab === id ? "active" : ""} key={id} onClick={() => setTab(id)}>{label}</button>)}
@@ -1022,13 +1061,7 @@ function PolicyHousingMatcher({ onService }) {
   const [workArea, setWorkArea] = useState("");
   const [housing, setHousing] = useState("");
   const step = !identity ? 1 : !workArea ? 2 : !housing ? 3 : 4;
-  const matches = identity === "newworker"
-    ? [affordableProjects[2]]
-    : workArea === "上城区"
-      ? [affordableProjects[0]]
-      : workArea === "拱墅区"
-        ? [affordableProjects[1]]
-        : [];
+  const matches = matchAffordableProjects(affordableProjects, identity, workArea);
 
   return (
     <section className="policy-matcher">
@@ -1211,7 +1244,7 @@ function Consent({ onAccept }) {
 function ServiceDrawer({ type, onClose, onNavigate }) {
   const drawerType = typeof type === "string" ? type : type.type;
   const fullPage = drawerType === "rent-market";
-  const content = drawerType === "mortgage" ? <Mortgage /> : drawerType === "fund" ? <Fund /> : drawerType === "buy-listings" ? <Listings kind="buy" /> : drawerType === "rent-listings" ? <Listings kind="rent" onNavigate={onNavigate} /> : drawerType === "rent-market" ? <RentalMarketplace /> : drawerType === "community-sale-listings" ? <CommunityListings mode="sale" communityName={type.communityName} /> : drawerType === "community-rent-listings" ? <CommunityListings mode="rent" communityName={type.communityName} /> : drawerType === "rent-detail" ? <RentDetail home={type.home} /> : drawerType === "affordable-projects" ? <PolicyProjects /> : drawerType === "affordable-alerts" ? <PolicyAlerts /> : drawerType === "affordable-apply" ? <PolicyApplication /> : drawerType === "affordable-progress" ? <PolicyProgress /> : drawerType === "affordable-project-detail" ? <PolicyProjectDetail project={type.project} /> : <GenericService type={drawerType} request={type} />;
+  const content = renderServiceContent(drawerType, type, onNavigate);
   return (
     <div className={`drawer-backdrop ${fullPage ? "full-backdrop" : ""}`} onClick={onClose}>
       <section className={`service-drawer ${fullPage ? "full-service-page" : ""}`} onClick={(event) => event.stopPropagation()}>
@@ -1221,6 +1254,26 @@ function ServiceDrawer({ type, onClose, onNavigate }) {
       </section>
     </div>
   );
+}
+
+function renderServiceContent(drawerType, request, onNavigate) {
+  const renderers = {
+    mortgage: () => <Mortgage />,
+    fund: () => <Fund />,
+    "buy-listings": () => <Listings kind="buy" />,
+    "rent-listings": () => <Listings kind="rent" onNavigate={onNavigate} />,
+    "rent-market": () => <RentalMarketplace />,
+    "community-sale-listings": () => <CommunityListings mode="sale" communityName={request.communityName} />,
+    "community-rent-listings": () => <CommunityListings mode="rent" communityName={request.communityName} />,
+    "rent-detail": () => <RentDetail home={request.home} />,
+    "affordable-projects": () => <PolicyProjects />,
+    "affordable-alerts": () => <PolicyAlerts />,
+    "affordable-apply": () => <PolicyApplication />,
+    "affordable-progress": () => <PolicyProgress />,
+    "affordable-project-detail": () => <PolicyProjectDetail project={request.project} />,
+  };
+
+  return renderers[drawerType]?.() ?? <GenericService type={drawerType} request={request} />;
 }
 
 function Listings({ kind, onNavigate }) {

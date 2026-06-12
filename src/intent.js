@@ -100,5 +100,6 @@ export function identifyPrompt(text) {
   if (isCommunityQuery(text)) return "community";
   if (/找.*租|想.*租|租房|合租|整租|可租房源|住得离|离公司|通勤.*租/.test(normalized)) return "rent";
   if (/预算|怎么选|哪个好|对比|比较|余杭.*萧山|萧山.*余杭/.test(normalized)) return "budget";
-  return "trend";
+  if (/房价|楼市|市场|走势|趋势|涨|跌|成交|均价/.test(normalized)) return "trend";
+  return "fallback";
 }

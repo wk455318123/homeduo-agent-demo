@@ -1,5 +1,7 @@
 import assert from "node:assert/strict";
 import { extractCommunityName, identifyPrompt } from "../src/intent.js";
+import { matchAffordableProjects } from "../src/policyMatching.js";
+import { resolveCommunityContext } from "../src/conversationContext.js";
 
 const cases = [
   ["万科城市花园租金怎么样", "community", "万科城市花园"],
@@ -30,6 +32,8 @@ const cases = [
   ["查看该小区出租房源", "listings", ""],
   ["看看小区生活便利度", "amenities", ""],
   ["想住得离公司更近", "rent", ""],
+  ["杭州现在适合买房吗", "fallback", ""],
+  ["你好，能帮我做什么", "fallback", ""],
 ];
 
 for (const [query, expectedIntent, expectedCommunity] of cases) {
@@ -37,4 +41,22 @@ for (const [query, expectedIntent, expectedCommunity] of cases) {
   assert.equal(extractCommunityName(query), expectedCommunity, `小区名称提取错误：${query}`);
 }
 
-console.log(`Intent regression tests passed: ${cases.length}`);
+const projects = [
+  { name: "上城人才房", type: "人才专项租赁住房", area: "上城区" },
+  { name: "钱塘蓝领公寓", type: "蓝领公寓", area: "钱塘区" },
+];
+
+assert.deepEqual(matchAffordableProjects(projects, "newworker", "上城区"), [], "新就业群体不应跨区匹配项目");
+assert.deepEqual(matchAffordableProjects(projects, "newworker", "钱塘区").map((item) => item.name), ["钱塘蓝领公寓"]);
+assert.deepEqual(matchAffordableProjects(projects, "graduate", "上城区").map((item) => item.name), ["上城人才房"]);
+
+assert.deepEqual(
+  resolveCommunityContext("community", "这个小区租金呢", "万科城市花园", extractCommunityName),
+  { communityName: "万科城市花园", nextCommunityContext: "万科城市花园" },
+);
+assert.deepEqual(
+  resolveCommunityContext("trend", "杭州最近房价什么走势", "万科城市花园", extractCommunityName),
+  { communityName: "该小区", nextCommunityContext: "" },
+);
+
+console.log(`Intent regression tests passed: ${cases.length} queries + 3 policy matching + 2 context cases`);
