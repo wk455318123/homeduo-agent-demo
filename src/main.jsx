@@ -50,7 +50,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { identifyPrompt } from "./intent.js";
+import { extractCommunityName, identifyPrompt } from "./intent.js";
 import "./styles.css";
 
 const BLUE = "#1677ff";
@@ -233,6 +233,7 @@ function App() {
   const [drawer, setDrawer] = useState(null);
   const [consent, setConsent] = useState(false);
   const [journey, setJourney] = useState(["了解需求"]);
+  const [communityContext, setCommunityContext] = useState("");
   const scrollRef = useRef(null);
 
   useEffect(() => {
@@ -251,12 +252,16 @@ function App() {
 
   const ask = (text, explicitId) => {
     if (!text.trim() || loading) return;
-    const id = explicitId || identifyPrompt(text);
+    const recognizedId = identifyPrompt(text);
+    const id = recognizedId === "community" ? "community" : explicitId || recognizedId;
+    const detectedCommunity = id === "community" ? extractCommunityName(text) : "";
+    const resolvedCommunity = detectedCommunity || communityContext || "该小区";
+    if (detectedCommunity) setCommunityContext(detectedCommunity);
     setMessages((prev) => [...prev, { role: "user", text }]);
     setInput("");
     setLoading(true);
     window.setTimeout(() => {
-      setMessages((prev) => [...prev, { role: "agent", id, query: text }]);
+      setMessages((prev) => [...prev, { role: "agent", id, query: text, communityName: resolvedCommunity }]);
       setLoading(false);
       setJourney((prev) => (prev.includes("获得分析") ? prev : [...prev, "获得分析"]));
     }, 760);
@@ -285,7 +290,7 @@ function App() {
                 message.role === "user" ? (
                   <UserMessage key={index} text={message.text} />
                 ) : (
-                  <AgentAnswer key={index} id={message.id} query={message.query} onAsk={ask} onService={openService} />
+                  <AgentAnswer key={index} id={message.id} query={message.query} communityName={message.communityName} onAsk={ask} onService={openService} />
                 )
               )}
               {loading && <LoadingAnswer />}
@@ -377,12 +382,12 @@ function LoadingAnswer() {
   );
 }
 
-function AgentAnswer({ id, query, onAsk, onService }) {
+function AgentAnswer({ id, query, communityName, onAsk, onService }) {
   const content = {
     trend: <TrendAnswer onService={onService} />,
     budget: <BudgetAnswer onService={onService} />,
     rent: <RentAnswer onService={onService} />,
-    community: <CommunityAnswer query={query} onService={onService} />,
+    community: <CommunityAnswer query={query} communityName={communityName} onService={onService} />,
     school: <SchoolAnswer onService={onService} />,
   }[id];
   return (
@@ -596,8 +601,7 @@ function KAHousingCard({ home, rank, onOpen, compact = false }) {
   );
 }
 
-function CommunityAnswer({ query, onService }) {
-  const communityName = extractCommunityName(query);
+function CommunityAnswer({ query, communityName = "万科城市花园", onService }) {
   return (
     <>
       <div className="answer-copy">
@@ -606,21 +610,13 @@ function CommunityAnswer({ query, onService }) {
       </div>
       <CommunityMarketCard communityName={communityName} />
       <ServiceActions title="继续了解这个小区" actions={[
-        { icon: Search, title: "查看二手房源", sub: "参考价附近共 62 套", type: "community-sale-listings" },
-        { icon: Building2, title: "查看出租房源", sub: "整租、合租共 18 套", type: "community-rent-listings" },
+        { icon: Search, title: "查看二手房源", sub: "参考价附近共 62 套", type: { type: "community-sale-listings", communityName } },
+        { icon: Building2, title: "查看出租房源", sub: "整租、合租共 18 套", type: { type: "community-rent-listings", communityName } },
         { icon: Calculator, title: "算一算月供", sub: "以 89㎡ 三房为例", type: "mortgage" },
       ]} onService={onService} />
       <SourceNote />
     </>
   );
-}
-
-function extractCommunityName(query = "") {
-  const known = ["万科城市花园"];
-  const matchedKnown = known.find((name) => query.includes(name));
-  if (matchedKnown) return matchedKnown;
-  const matched = query.match(/([\u4e00-\u9fa5A-Za-z0-9]{2,14}(?:花园|家园|公馆|小区|苑|府))/);
-  return matched?.[1] || "万科城市花园";
 }
 
 function CommunityMarketCard({ communityName }) {
@@ -822,7 +818,7 @@ function Consent({ onAccept }) {
 
 function ServiceDrawer({ type, onClose }) {
   const drawerType = typeof type === "string" ? type : type.type;
-  const content = drawerType === "mortgage" ? <Mortgage /> : drawerType === "fund" ? <Fund /> : drawerType === "buy-listings" ? <Listings kind="buy" /> : drawerType === "rent-listings" ? <Listings kind="rent" /> : drawerType === "community-sale-listings" ? <CommunityListings mode="sale" /> : drawerType === "community-rent-listings" ? <CommunityListings mode="rent" /> : drawerType === "rent-detail" ? <RentDetail home={type.home} /> : <GenericService type={drawerType} />;
+  const content = drawerType === "mortgage" ? <Mortgage /> : drawerType === "fund" ? <Fund /> : drawerType === "buy-listings" ? <Listings kind="buy" /> : drawerType === "rent-listings" ? <Listings kind="rent" /> : drawerType === "community-sale-listings" ? <CommunityListings mode="sale" communityName={type.communityName} /> : drawerType === "community-rent-listings" ? <CommunityListings mode="rent" communityName={type.communityName} /> : drawerType === "rent-detail" ? <RentDetail home={type.home} /> : <GenericService type={drawerType} />;
   return (
     <div className="drawer-backdrop" onMouseDown={onClose}>
       <section className="service-drawer" onMouseDown={(event) => event.stopPropagation()}>
@@ -875,12 +871,12 @@ function Listings({ kind }) {
   );
 }
 
-function CommunityListings({ mode }) {
+function CommunityListings({ mode, communityName = "万科城市花园" }) {
   const [active, setActive] = useState(mode);
   const homes = communityHomes[active];
   return (
     <>
-      <div className="drawer-title"><span>万科城市花园房源</span><small>与小区市场卡片联动 · 模拟房源</small></div>
+      <div className="drawer-title"><span>{communityName}房源</span><small>与小区市场卡片联动 · 模拟房源</small></div>
       <div className="community-listing-tabs"><button className={active === "sale" ? "active" : ""} onClick={() => setActive("sale")}>二手在售 62</button><button className={active === "rent" ? "active" : ""} onClick={() => setActive("rent")}>当前出租 18</button></div>
       <div className="community-listing-summary">
         <div><span>{active === "sale" ? "二手参考价" : "主流两房租金"}</span><strong>{active === "sale" ? "34,500 元/㎡" : "5,300 元/月"}</strong></div>
@@ -890,7 +886,7 @@ function CommunityListings({ mode }) {
         {homes.map((home) => (
           <button className="community-home-card" key={home.title}>
             <span className="community-home-image" style={{ backgroundImage: `url(${home.image})` }}><em>{home.tag}</em></span>
-            <span className="community-home-copy"><strong>{home.title}</strong><small>{home.meta}</small><span>{home.unit}</span></span>
+            <span className="community-home-copy"><strong>{home.title.replace("万科城市花园", communityName)}</strong><small>{home.meta}</small><span>{home.unit}</span></span>
             <b>{home.price}<ChevronRight size={14} /></b>
           </button>
         ))}
