@@ -5,6 +5,7 @@ import {
   ArrowRight,
   BadgeCheck,
   BedDouble,
+  BellRing,
   BriefcaseBusiness,
   Building2,
   CalendarClock,
@@ -14,6 +15,7 @@ import {
   ChevronRight,
   CircleHelp,
   Clock3,
+  CreditCard,
   FileCheck2,
   GraduationCap,
   Home,
@@ -29,6 +31,7 @@ import {
   PawPrint,
   Plus,
   RefreshCw,
+  ReceiptText,
   Search,
   Send,
   ShieldCheck,
@@ -36,6 +39,7 @@ import {
   Sparkles,
   TrainFront,
   TrendingDown,
+  Truck,
   UserCheck,
   WalletCards,
   X,
@@ -135,6 +139,10 @@ const affordableProjects = [
     rent: "人才优惠租金最高可至评估价 7 折",
     layout: "两室一厅 · 约 57-59㎡",
     status: "关注后续配租公告",
+    stage: "即将开放",
+    deadline: "预计 6月28日开放",
+    updated: "今天 09:30",
+    sourceLevel: "市级官方平台",
     fit: "高校毕业生 / 各类人才",
     source: "杭州市住房租赁公众服务平台",
   },
@@ -145,6 +153,10 @@ const affordableProjects = [
     rent: "项目实行一房一价",
     layout: "精装房源 · 拎包入住",
     status: "常态化配租信息待核验",
+    stage: "常态化登记",
+    deadline: "登记后等待房源通知",
+    updated: "昨天 16:20",
+    sourceLevel: "区级运营公告",
     fit: "在杭就业人才",
     source: "杭州市住房租赁公众服务平台",
   },
@@ -155,6 +167,10 @@ const affordableProjects = [
     rent: "床位约 150 元/月起",
     layout: "单人间 / 双人间 / 四人间",
     status: "适合新就业群体关注",
+    stage: "开放申请中",
+    deadline: "6月20日截止",
+    updated: "今天 08:15",
+    sourceLevel: "区级官方平台",
     fit: "产业工人 / 新就业群体",
     source: "杭州市住房租赁公众服务平台",
   },
@@ -381,7 +397,7 @@ function Welcome({ onAsk, onService }) {
       <div className="welcome-orbit"><div className="welcome-home"><Home size={28} /></div></div>
       <p className="eyebrow">支付宝房产服务助手</p>
       <h1>关于杭州的房子，<br />从了解开始，一路帮你办。</h1>
-      <p className="welcome-copy">问趋势、选区域、找房源，也可以继续算月供、查公积金和办理租房服务。</p>
+      <p className="welcome-copy">问趋势、选区域、找房源，也可以继续查政策住房、算月供、提公积金和办理租房服务。</p>
       <div className="prompt-grid">
         {prompts.map(({ id, label, icon: Icon }) => (
           <button key={id} onClick={() => onAsk(label, id)} className="prompt-card">
@@ -393,6 +409,7 @@ function Welcome({ onAsk, onService }) {
       </div>
       <div className="welcome-services">
         <button onClick={() => onService("buy-listings")}><Search size={17} />找房源</button>
+        <button onClick={() => onService("affordable-projects")}><ShieldCheck size={17} />政策住房</button>
         <button onClick={() => onService("mortgage")}><Calculator size={17} />算月供</button>
         <button onClick={() => onService("fund")}><Landmark size={17} />查公积金</button>
       </div>
@@ -745,7 +762,7 @@ function AffordableHousingAnswer({ onService }) {
       <PolicyHousingMatcher onService={onService} />
       <ServiceActions title="支付宝里继续办理" actions={[
         { icon: Search, title: "查看政策住房项目", sub: "聚合官方公告与开放状态", type: "affordable-projects" },
-        { icon: FileCheck2, title: "准备申请材料", sub: "授权核验并生成材料清单", type: "affordable-apply" },
+        { icon: BellRing, title: "订阅开放提醒", sub: "截止、补充材料及时通知", type: "affordable-alerts" },
         { icon: Clock3, title: "查询申请进度", sub: "统一查看审核、选房与签约", type: "affordable-progress" },
       ]} onService={onService} />
       <div className="source-note"><span>政策信息来源：杭州市住房租赁公众服务平台等官方渠道</span><span>申请资格、项目状态与租金以最新官方公告和审批结果为准。</span></div>
@@ -812,9 +829,9 @@ function PolicyQuestion({ title, hint, children }) {
 function PolicyProjectCard({ project, onOpen }) {
   return (
     <button className="policy-project-card" onClick={onOpen}>
-      <span className="policy-type">{project.type}</span>
-      <span className="policy-project-copy"><strong>{project.name}</strong><small><MapPin size={11} />{project.area} · {project.layout}</small><em>{project.rent}</em></span>
-      <span className="policy-project-status"><b>{project.status}</b><ChevronRight size={15} /></span>
+      <span className="policy-card-labels"><span className="policy-type">{project.type}</span><i className={project.stage === "开放申请中" ? "open" : ""}>{project.stage}</i></span>
+      <span className="policy-project-copy"><strong>{project.name}</strong><small><MapPin size={11} />{project.area} · {project.layout}</small><em>{project.rent}</em><small className="policy-update"><RefreshCw size={10} />更新于 {project.updated}</small></span>
+      <span className="policy-project-status"><b>{project.deadline}</b><ChevronRight size={15} /></span>
     </button>
   );
 }
@@ -916,6 +933,7 @@ function JourneyPanel({ journey, onService }) {
       <div className="side-section">
         <strong>杭州常用服务</strong>
         <button onClick={() => onService("fund")}><Landmark size={17} />公积金查询<ChevronRight size={15} /></button>
+        <button onClick={() => onService("affordable-projects")}><ShieldCheck size={17} />政策住房<ChevronRight size={15} /></button>
         <button onClick={() => onService("mortgage")}><Calculator size={17} />房贷计算器<ChevronRight size={15} /></button>
         <button onClick={() => onService("rent-listings")}><Building2 size={17} />可信租房源<ChevronRight size={15} /></button>
       </div>
@@ -941,7 +959,7 @@ function Consent({ onAccept }) {
 
 function ServiceDrawer({ type, onClose }) {
   const drawerType = typeof type === "string" ? type : type.type;
-  const content = drawerType === "mortgage" ? <Mortgage /> : drawerType === "fund" ? <Fund /> : drawerType === "buy-listings" ? <Listings kind="buy" /> : drawerType === "rent-listings" ? <Listings kind="rent" /> : drawerType === "community-sale-listings" ? <CommunityListings mode="sale" communityName={type.communityName} /> : drawerType === "community-rent-listings" ? <CommunityListings mode="rent" communityName={type.communityName} /> : drawerType === "rent-detail" ? <RentDetail home={type.home} /> : drawerType === "affordable-projects" ? <PolicyProjects /> : drawerType === "affordable-apply" ? <PolicyApplication /> : drawerType === "affordable-progress" ? <PolicyProgress /> : drawerType === "affordable-project-detail" ? <PolicyProjectDetail project={type.project} /> : <GenericService type={drawerType} />;
+  const content = drawerType === "mortgage" ? <Mortgage /> : drawerType === "fund" ? <Fund /> : drawerType === "buy-listings" ? <Listings kind="buy" /> : drawerType === "rent-listings" ? <Listings kind="rent" /> : drawerType === "community-sale-listings" ? <CommunityListings mode="sale" communityName={type.communityName} /> : drawerType === "community-rent-listings" ? <CommunityListings mode="rent" communityName={type.communityName} /> : drawerType === "rent-detail" ? <RentDetail home={type.home} /> : drawerType === "affordable-projects" ? <PolicyProjects /> : drawerType === "affordable-alerts" ? <PolicyAlerts /> : drawerType === "affordable-apply" ? <PolicyApplication /> : drawerType === "affordable-progress" ? <PolicyProgress /> : drawerType === "affordable-project-detail" ? <PolicyProjectDetail project={type.project} /> : <GenericService type={drawerType} />;
   return (
     <div className="drawer-backdrop" onMouseDown={onClose}>
       <section className="service-drawer" onMouseDown={(event) => event.stopPropagation()}>
@@ -1022,11 +1040,18 @@ function CommunityListings({ mode, communityName = "万科城市花园" }) {
 
 function PolicyProjects() {
   const [selected, setSelected] = useState(null);
+  const [subscribed, setSubscribed] = useState(false);
   if (selected) return <><button className="detail-back" onClick={() => setSelected(null)}><ArrowLeft size={15} />返回项目列表</button><PolicyProjectDetail project={selected} /></>;
   return (
     <>
       <div className="drawer-title"><span>杭州政策住房项目</span><small>聚合官方公告 · 项目状态定期更新</small></div>
       <div className="policy-source-banner"><ShieldCheck size={20} /><div><strong>官方信息结构化</strong><span>将分散在市级、各区和运营方的公告统一为可筛选项目</span></div></div>
+      <div className="policy-live-summary">
+        <span><strong>1</strong><small>开放申请中</small></span>
+        <span><strong>1</strong><small>即将开放</small></span>
+        <span><strong>今天 09:30</strong><small>最近更新</small></span>
+        <button className={subscribed ? "active" : ""} onClick={() => setSubscribed(!subscribed)}>{subscribed ? <Check size={14} /> : <BellRing size={14} />}{subscribed ? "已订阅" : "订阅更新"}</button>
+      </div>
       <div className="filter-row"><button>全部类型<ChevronDown size={13} /></button><button>工作区域<ChevronDown size={13} /></button><button>开放状态<ChevronDown size={13} /></button><button aria-label="筛选"><SlidersHorizontal size={15} /></button></div>
       <div className="policy-project-list drawer-policy-list">{affordableProjects.map((project) => <PolicyProjectCard key={project.name} project={project} onOpen={() => setSelected(project)} />)}</div>
       <p className="drawer-footnote">申请期和项目状态以最新官方公告为准，支付宝可提供变更提醒。</p>
@@ -1035,21 +1060,48 @@ function PolicyProjects() {
 }
 
 function PolicyProjectDetail({ project }) {
+  const [subscribed, setSubscribed] = useState(false);
   return (
     <>
       <div className="drawer-title"><span>{project.name}</span><small>{project.area} · {project.type}</small></div>
-      <div className="project-status-panel"><span>{project.status}</span><strong>{project.rent}</strong><small>{project.layout}</small></div>
+      <div className="project-status-panel"><span>{project.stage} · {project.deadline}</span><strong>{project.rent}</strong><small>{project.layout}</small></div>
+      <div className="policy-notice-meta">
+        <span><CalendarClock size={15} /><strong>{project.deadline}</strong><small>关键时间</small></span>
+        <span><RefreshCw size={15} /><strong>{project.updated}</strong><small>信息更新时间</small></span>
+        <span><BadgeCheck size={15} /><strong>{project.sourceLevel}</strong><small>来源层级</small></span>
+      </div>
       <div className="policy-detail-section"><strong>适合人群</strong><p>{project.fit}</p></div>
       <div className="policy-detail-section"><strong>常见准入核验项</strong><div className="requirement-grid"><span><BriefcaseBusiness size={16} />劳动关系 / 社保</span><span><FileCheck2 size={16} />居住证或户籍</span><span><Home size={16} />家庭住房情况</span><span><ShieldCheck size={16} />住房优惠状态</span></div></div>
-      <div className="official-source-row"><BadgeCheck size={16} /><div><strong>信息来源</strong><span>{project.source}</span></div></div>
+      <div className="official-source-row"><BadgeCheck size={16} /><div><strong>已结构化官方公告</strong><span>{project.source} · 更新于 {project.updated}</span></div></div>
+      <button className={`secondary-wide policy-subscribe-button ${subscribed ? "active" : ""}`} onClick={() => setSubscribed(!subscribed)}>{subscribed ? <><Check size={16} />已订阅项目变化</> : <><BellRing size={16} />订阅开放与截止提醒</>}</button>
       <button className="primary-wide">授权核验申请条件<ArrowRight size={17} /></button>
       <p className="drawer-footnote">当前为产品 Demo，不会实际提交政府申请。</p>
     </>
   );
 }
 
+function PolicyAlerts() {
+  const [areas, setAreas] = useState(["上城区"]);
+  const [types, setTypes] = useState(["人才房", "保租房"]);
+  const [subscribed, setSubscribed] = useState(false);
+  const toggle = (value, values, setValues) => setValues(values.includes(value) ? values.filter((item) => item !== value) : [...values, value]);
+  return (
+    <>
+      <div className="drawer-title"><span>政策住房订阅</span><small>把分散公告变成支付宝里的主动提醒</small></div>
+      <div className="alert-value"><BellRing size={23} /><div><strong>不错过开放、截止和补充材料</strong><span>匹配到新项目或申请状态变化时，通过支付宝消息通知。</span></div></div>
+      <div className="alert-section"><strong>关注区域</strong><div className="select-chips">{["上城区", "拱墅区", "余杭区", "钱塘区"].map((area) => <button className={areas.includes(area) ? "active" : ""} key={area} onClick={() => toggle(area, areas, setAreas)}>{areas.includes(area) && <Check size={12} />}{area}</button>)}</div></div>
+      <div className="alert-section"><strong>住房类型</strong><div className="select-chips">{["人才房", "保租房", "公租房", "蓝领公寓"].map((type) => <button className={types.includes(type) ? "active" : ""} key={type} onClick={() => toggle(type, types, setTypes)}>{types.includes(type) && <Check size={12} />}{type}</button>)}</div></div>
+      <div className="alert-section"><strong>提醒内容</strong><div className="alert-rules"><span><CalendarClock size={16} /><div><b>开放与截止提醒</b><small>提前 3 天、当天各提醒一次</small></div><i>已开启</i></span><span><FileCheck2 size={16} /><div><b>材料与资格变化</b><small>公告条件变化时重新匹配</small></div><i>已开启</i></span><span><Clock3 size={16} /><div><b>申请进度提醒</b><small>补材料、选房、签约及时通知</small></div><i>已开启</i></span></div></div>
+      <button className="primary-wide" onClick={() => setSubscribed(true)}>{subscribed ? <><Check size={16} />订阅已保存</> : <><BellRing size={16} />开启支付宝消息订阅</>}</button>
+      {subscribed && <div className="subscription-success"><Check size={16} /><div><strong>已订阅 {areas.length} 个区域、{types.length} 类住房</strong><span>发现新公告后将自动判断是否与你匹配。</span></div></div>}
+      <p className="drawer-footnote">提醒基于结构化公告，项目状态仍以官方渠道为准。</p>
+    </>
+  );
+}
+
 function PolicyApplication() {
   const [authorized, setAuthorized] = useState(false);
+  const [generated, setGenerated] = useState(false);
   const checks = [["实名认证", "支付宝账户"], ["学历信息", "学信网授权"], ["就业与社保", "政务服务授权"], ["人才认定", "人才会客厅"], ["不动产情况", "政府部门核验"]];
   return (
     <>
@@ -1058,21 +1110,44 @@ function PolicyApplication() {
       <div className="verification-list">
         {checks.map(([name, source], index) => <div key={name}><span className={authorized ? "verified" : ""}>{authorized ? <Check size={14} /> : index + 1}</span><div><strong>{name}</strong><small>{source}</small></div><em>{authorized ? "已获取模拟结果" : "待授权"}</em></div>)}
       </div>
-      {!authorized ? <button className="primary-wide" onClick={() => setAuthorized(true)}>支付宝授权并开始核验</button> : <><div className="verification-result"><Check size={17} /><div><strong>预核验完成</strong><span>初步满足继续申请条件，建议选择具体项目后提交。</span></div></div><button className="primary-wide">选择项目并生成申请表<ArrowRight size={17} /></button></>}
+      {!authorized ? <button className="primary-wide" onClick={() => setAuthorized(true)}>支付宝授权并开始核验</button> : <><div className="verification-result"><Check size={17} /><div><strong>预核验完成</strong><span>初步满足继续申请条件，建议选择具体项目后提交。</span></div></div><button className="primary-wide" onClick={() => setGenerated(true)}>{generated ? <><Check size={17} />申请表已生成</> : <>选择项目并生成申请表<ArrowRight size={17} /></>}</button>{generated && <div className="application-generated"><ReceiptText size={17} /><div><strong>申请信息已自动填充</strong><span>提交前仍可检查和修改，确认后将跳转官方申请入口。</span></div></div>}</>}
       <p className="drawer-footnote">预核验结果不代表政府审批结论。</p>
     </>
   );
 }
 
 function PolicyProgress() {
+  const [view, setView] = useState("progress");
+  const [paid, setPaid] = useState(false);
   return (
     <>
-      <div className="drawer-title"><span>政策住房申请进度</span><small>统一查看不同项目办理状态 · Demo</small></div>
-      <div className="progress-project"><span className="policy-type">人才专项租赁住房</span><strong>潮语贤庭</strong><small>申请编号：HZRC202606120018</small></div>
-      <div className="application-timeline">
-        {[["报名申请", "已完成", "6月10日"], ["资格审核", "审核中", "预计 3 个工作日"], ["摇号 / 选房", "待开始", "以项目通知为准"], ["签约入住", "待开始", "线上签约与缴费"]].map(([name, state, meta], index) => <div className={index < 2 ? "active" : ""} key={name}><i>{index === 0 ? <Check size={13} /> : index + 1}</i><span><strong>{name}</strong><small>{meta}</small></span><em>{state}</em></div>)}
+      <div className="drawer-title"><span>政策住房服务台</span><small>从申请进度持续服务到入住生活 · Demo</small></div>
+      <div className="policy-service-tabs"><button className={view === "progress" ? "active" : ""} onClick={() => setView("progress")}>申请进度</button><button className={view === "movein" ? "active" : ""} onClick={() => setView("movein")}>入住服务预览</button></div>
+      {view === "progress" ? <>
+        <div className="progress-project"><span className="policy-type">人才专项租赁住房</span><strong>潮语贤庭</strong><small>申请编号：HZRC202606120018</small></div>
+        <div className="application-timeline">
+          {[["报名申请", "已完成", "6月10日"], ["资格审核", "审核中", "预计 3 个工作日"], ["摇号 / 选房", "待开始", "以项目通知为准"], ["签约入住", "待开始", "线上签约与缴费"]].map(([name, state, meta], index) => <div className={index < 2 ? "active" : ""} key={name}><i>{index === 0 ? <Check size={13} /> : index + 1}</i><span><strong>{name}</strong><small>{meta}</small></span><em>{state}</em></div>)}
+        </div>
+        <div className="progress-reminder"><Clock3 size={17} /><div><strong>支付宝消息提醒已开启</strong><span>状态变化、补充材料和选房时间将及时提醒。</span></div></div>
+        <button className="secondary-wide progress-preview" onClick={() => setView("movein")}>预览审核通过后的服务<ArrowRight size={16} /></button>
+      </> : <MoveInServices paid={paid} setPaid={setPaid} />}
+    </>
+  );
+}
+
+function MoveInServices({ paid, setPaid }) {
+  return (
+    <>
+      <div className="movein-hero"><KeyRound size={23} /><div><strong>审核通过后，继续在支付宝办入住</strong><span>签约、缴租、公积金提取与生活服务统一承接。</span></div></div>
+      <div className="rent-bill-card"><span><ReceiptText size={18} /><div><small>7月房租账单</small><strong>2,680 元</strong><em>7月5日前支付</em></div></span><button className={paid ? "paid" : ""} onClick={() => setPaid(true)}>{paid ? <><Check size={14} />已缴纳</> : <><CreditCard size={14} />立即缴租</>}</button></div>
+      <div className="movein-services-grid">
+        <button><FileCheck2 size={19} /><strong>在线签约</strong><small>查看合同与实名认证</small></button>
+        <button><Landmark size={19} /><strong>公积金提取</strong><small>按月提取用于支付房租</small></button>
+        <button><WalletCards size={19} /><strong>生活缴费</strong><small>水电燃气账单统一管理</small></button>
+        <button><Truck size={19} /><strong>搬家保洁</strong><small>预约入住与维修服务</small></button>
       </div>
-      <div className="progress-reminder"><Clock3 size={17} /><div><strong>支付宝消息提醒已开启</strong><span>状态变化、补充材料和选房时间将及时提醒。</span></div></div>
+      <div className="progress-reminder"><BellRing size={17} /><div><strong>房租与合同提醒已开启</strong><span>缴费日前、合同到期前和政策复核前主动提醒。</span></div></div>
+      <p className="drawer-footnote">入住服务为产品设想 Demo，实际能力以合作接入情况为准。</p>
     </>
   );
 }
