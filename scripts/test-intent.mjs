@@ -14,6 +14,9 @@ const cases = [
   ["余杭房价怎么样", "trend", ""],
   ["300万预算余杭和萧山怎么选", "budget", ""],
   ["万科城市花园学区怎么样", "school", ""],
+  ["我能申请杭州保租房吗", "affordable", ""],
+  ["人才房申请需要什么条件", "affordable", ""],
+  ["钱塘区蓝领公寓怎么申请", "affordable", ""],
 ];
 
 for (const [query, expectedIntent, expectedCommunity] of cases) {

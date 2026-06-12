@@ -5,6 +5,7 @@ import {
   ArrowRight,
   BadgeCheck,
   BedDouble,
+  BriefcaseBusiness,
   Building2,
   CalendarClock,
   Calculator,
@@ -14,6 +15,7 @@ import {
   CircleHelp,
   Clock3,
   FileCheck2,
+  GraduationCap,
   Home,
   KeyRound,
   Landmark,
@@ -34,6 +36,7 @@ import {
   Sparkles,
   TrainFront,
   TrendingDown,
+  UserCheck,
   WalletCards,
   X,
 } from "lucide-react";
@@ -111,6 +114,7 @@ const prompts = [
   { id: "budget", label: "300万预算，余杭和萧山怎么选？", icon: WalletCards },
   { id: "rent", label: "我想在杭州租房，帮我找找", icon: Building2 },
   { id: "community", label: "万科城市花园二手房价和租金？", icon: Home },
+  { id: "affordable", label: "我能申请杭州保租房或人才房吗？", icon: ShieldCheck },
   { id: "school", label: "万科城市花园学区怎么样？", icon: CircleHelp },
 ];
 
@@ -119,8 +123,42 @@ const suggestions = {
   budget: ["查看余杭在售房源", "按我的收入算月供", "余杭最近房价走势"],
   rent: ["怎么提取公积金付房租？", "自如房源支持免押吗？", "想住得离公司更近"],
   community: ["这个小区近半年成交怎么样？", "查看该小区出租房源", "算一算租售比"],
+  affordable: ["查看正在开放的项目", "人才房需要哪些材料？", "查询我的申请进度"],
   school: ["查询杭州入学政策", "看看小区生活便利度", "查看周边在售房源"],
 };
+
+const affordableProjects = [
+  {
+    name: "潮语贤庭",
+    type: "人才专项租赁住房",
+    area: "上城区",
+    rent: "人才优惠租金最高可至评估价 7 折",
+    layout: "两室一厅 · 约 57-59㎡",
+    status: "关注后续配租公告",
+    fit: "高校毕业生 / 各类人才",
+    source: "杭州市住房租赁公众服务平台",
+  },
+  {
+    name: "宸寓·如栖兰庭",
+    type: "人才专项租赁住房",
+    area: "拱墅区",
+    rent: "项目实行一房一价",
+    layout: "精装房源 · 拎包入住",
+    status: "常态化配租信息待核验",
+    fit: "在杭就业人才",
+    source: "杭州市住房租赁公众服务平台",
+  },
+  {
+    name: "宁巢·钱塘蓝领公寓",
+    type: "蓝领公寓",
+    area: "钱塘区",
+    rent: "床位约 150 元/月起",
+    layout: "单人间 / 双人间 / 四人间",
+    status: "适合新就业群体关注",
+    fit: "产业工人 / 新就业群体",
+    source: "杭州市住房租赁公众服务平台",
+  },
+];
 
 const listings = {
   buy: [
@@ -388,6 +426,7 @@ function AgentAnswer({ id, query, communityName, onAsk, onService }) {
     budget: <BudgetAnswer onService={onService} />,
     rent: <RentAnswer onService={onService} />,
     community: <CommunityAnswer query={query} communityName={communityName} onService={onService} />,
+    affordable: <AffordableHousingAnswer onService={onService} />,
     school: <SchoolAnswer onService={onService} />,
   }[id];
   return (
@@ -696,6 +735,90 @@ function CommunityRentTrend() {
   );
 }
 
+function AffordableHousingAnswer({ onService }) {
+  return (
+    <>
+      <div className="answer-copy">
+        <strong>可以先帮你判断适合哪类政策住房，再匹配近期项目和申请入口。</strong>
+        <p>保租房、人才专项租赁住房、公租房和蓝领公寓的条件、申请时间与材料并不完全相同。支付宝可以聚合官方公告，并经你授权后预核验部分资格信息。</p>
+      </div>
+      <PolicyHousingMatcher onService={onService} />
+      <ServiceActions title="支付宝里继续办理" actions={[
+        { icon: Search, title: "查看政策住房项目", sub: "聚合官方公告与开放状态", type: "affordable-projects" },
+        { icon: FileCheck2, title: "准备申请材料", sub: "授权核验并生成材料清单", type: "affordable-apply" },
+        { icon: Clock3, title: "查询申请进度", sub: "统一查看审核、选房与签约", type: "affordable-progress" },
+      ]} onService={onService} />
+      <div className="source-note"><span>政策信息来源：杭州市住房租赁公众服务平台等官方渠道</span><span>申请资格、项目状态与租金以最新官方公告和审批结果为准。</span></div>
+    </>
+  );
+}
+
+function PolicyHousingMatcher({ onService }) {
+  const [identity, setIdentity] = useState("");
+  const [workArea, setWorkArea] = useState("");
+  const [housing, setHousing] = useState("");
+  const step = !identity ? 1 : !workArea ? 2 : !housing ? 3 : 4;
+  const matches = identity === "newworker"
+    ? [affordableProjects[2]]
+    : workArea === "上城区"
+      ? [affordableProjects[0], affordableProjects[1]]
+      : [affordableProjects[1], affordableProjects[0]];
+
+  return (
+    <section className="policy-matcher">
+      <div className="policy-head">
+        <div><span><ShieldCheck size={14} />政策住房资格预匹配</span><strong>{step < 4 ? `回答 ${step} 个问题，快速找到适合类型` : `初步匹配 ${matches.length} 个方向`}</strong></div>
+        <span className="policy-progress">{[1, 2, 3].map((item) => <i className={step >= item ? "active" : ""} key={item} />)}</span>
+      </div>
+      {step === 1 && (
+        <PolicyQuestion title="哪种身份最接近你？" hint="不同保障类型面向人群不同">
+          <ChoiceButton title="高校毕业生" sub="大专及以上学历，在杭就业或求职" onClick={() => setIdentity("graduate")} />
+          <ChoiceButton title="杭州认定人才" sub="市级或区级人才、人才居住证等" onClick={() => setIdentity("talent")} />
+          <ChoiceButton title="新市民 / 青年人" sub="在杭就业，希望降低租住成本" onClick={() => setIdentity("youth")} />
+          <ChoiceButton title="新就业群体" sub="快递、配送、网约车等行业" onClick={() => setIdentity("newworker")} />
+        </PolicyQuestion>
+      )}
+      {step === 2 && (
+        <PolicyQuestion title="你的工作或主要通勤区域？" hint="政策住房通常强调职住平衡">
+          {["上城区", "拱墅区", "余杭区", "钱塘区"].map((area) => <ChoiceButton key={area} title={area} sub="优先匹配所在区及周边项目" onClick={() => setWorkArea(area)} />)}
+        </PolicyQuestion>
+      )}
+      {step === 3 && (
+        <PolicyQuestion title="家庭住房与优惠情况？" hint="系统仅用于预匹配，最终以官方核验为准">
+          <ChoiceButton title="在相关区域无住房" sub="且未享受其他住房租赁优惠" onClick={() => setHousing("clear")} />
+          <ChoiceButton title="情况不确定" sub="授权后帮助核验不动产和优惠状态" onClick={() => setHousing("unknown")} />
+        </PolicyQuestion>
+      )}
+      {step === 4 && (
+        <div className="policy-results">
+          <div className="policy-result-summary"><UserCheck size={19} /><div><strong>初步具备继续核验的条件</strong><span>{workArea} · {identity === "talent" ? "人才身份" : identity === "graduate" ? "高校毕业生" : identity === "newworker" ? "新就业群体" : "新市民/青年人"} · {housing === "clear" ? "相关区域无房" : "住房情况待核验"}</span></div><button onClick={() => { setIdentity(""); setWorkArea(""); setHousing(""); }}>重选</button></div>
+          <div className="policy-auth-row">
+            <span><BadgeCheck size={15} /><div><strong>支付宝可协助核验</strong><small>身份、学历、社保、人才认定与不动产等授权信息</small></div></span>
+            <button onClick={() => onService("affordable-apply")}>开始核验<ChevronRight size={14} /></button>
+          </div>
+          <div className="policy-project-list">
+            {matches.map((project) => <PolicyProjectCard project={project} key={project.name} onOpen={() => onService({ type: "affordable-project-detail", project })} />)}
+          </div>
+        </div>
+      )}
+    </section>
+  );
+}
+
+function PolicyQuestion({ title, hint, children }) {
+  return <div className="policy-question"><div><strong>{title}</strong><span>{hint}</span></div><div className="match-choices">{children}</div></div>;
+}
+
+function PolicyProjectCard({ project, onOpen }) {
+  return (
+    <button className="policy-project-card" onClick={onOpen}>
+      <span className="policy-type">{project.type}</span>
+      <span className="policy-project-copy"><strong>{project.name}</strong><small><MapPin size={11} />{project.area} · {project.layout}</small><em>{project.rent}</em></span>
+      <span className="policy-project-status"><b>{project.status}</b><ChevronRight size={15} /></span>
+    </button>
+  );
+}
+
 function SchoolAnswer({ onService }) {
   return (
     <>
@@ -818,7 +941,7 @@ function Consent({ onAccept }) {
 
 function ServiceDrawer({ type, onClose }) {
   const drawerType = typeof type === "string" ? type : type.type;
-  const content = drawerType === "mortgage" ? <Mortgage /> : drawerType === "fund" ? <Fund /> : drawerType === "buy-listings" ? <Listings kind="buy" /> : drawerType === "rent-listings" ? <Listings kind="rent" /> : drawerType === "community-sale-listings" ? <CommunityListings mode="sale" communityName={type.communityName} /> : drawerType === "community-rent-listings" ? <CommunityListings mode="rent" communityName={type.communityName} /> : drawerType === "rent-detail" ? <RentDetail home={type.home} /> : <GenericService type={drawerType} />;
+  const content = drawerType === "mortgage" ? <Mortgage /> : drawerType === "fund" ? <Fund /> : drawerType === "buy-listings" ? <Listings kind="buy" /> : drawerType === "rent-listings" ? <Listings kind="rent" /> : drawerType === "community-sale-listings" ? <CommunityListings mode="sale" communityName={type.communityName} /> : drawerType === "community-rent-listings" ? <CommunityListings mode="rent" communityName={type.communityName} /> : drawerType === "rent-detail" ? <RentDetail home={type.home} /> : drawerType === "affordable-projects" ? <PolicyProjects /> : drawerType === "affordable-apply" ? <PolicyApplication /> : drawerType === "affordable-progress" ? <PolicyProgress /> : drawerType === "affordable-project-detail" ? <PolicyProjectDetail project={type.project} /> : <GenericService type={drawerType} />;
   return (
     <div className="drawer-backdrop" onMouseDown={onClose}>
       <section className="service-drawer" onMouseDown={(event) => event.stopPropagation()}>
@@ -893,6 +1016,63 @@ function CommunityListings({ mode, communityName = "万科城市花园" }) {
       </div>
       <button className="primary-wide">{active === "sale" ? "查看全部二手房源" : "查看全部出租房源"}<ArrowRight size={17} /></button>
       <p className="drawer-footnote">房源及价格为 Demo 模拟数据，实际信息以合作平台为准。</p>
+    </>
+  );
+}
+
+function PolicyProjects() {
+  const [selected, setSelected] = useState(null);
+  if (selected) return <><button className="detail-back" onClick={() => setSelected(null)}><ArrowLeft size={15} />返回项目列表</button><PolicyProjectDetail project={selected} /></>;
+  return (
+    <>
+      <div className="drawer-title"><span>杭州政策住房项目</span><small>聚合官方公告 · 项目状态定期更新</small></div>
+      <div className="policy-source-banner"><ShieldCheck size={20} /><div><strong>官方信息结构化</strong><span>将分散在市级、各区和运营方的公告统一为可筛选项目</span></div></div>
+      <div className="filter-row"><button>全部类型<ChevronDown size={13} /></button><button>工作区域<ChevronDown size={13} /></button><button>开放状态<ChevronDown size={13} /></button><button aria-label="筛选"><SlidersHorizontal size={15} /></button></div>
+      <div className="policy-project-list drawer-policy-list">{affordableProjects.map((project) => <PolicyProjectCard key={project.name} project={project} onOpen={() => setSelected(project)} />)}</div>
+      <p className="drawer-footnote">申请期和项目状态以最新官方公告为准，支付宝可提供变更提醒。</p>
+    </>
+  );
+}
+
+function PolicyProjectDetail({ project }) {
+  return (
+    <>
+      <div className="drawer-title"><span>{project.name}</span><small>{project.area} · {project.type}</small></div>
+      <div className="project-status-panel"><span>{project.status}</span><strong>{project.rent}</strong><small>{project.layout}</small></div>
+      <div className="policy-detail-section"><strong>适合人群</strong><p>{project.fit}</p></div>
+      <div className="policy-detail-section"><strong>常见准入核验项</strong><div className="requirement-grid"><span><BriefcaseBusiness size={16} />劳动关系 / 社保</span><span><FileCheck2 size={16} />居住证或户籍</span><span><Home size={16} />家庭住房情况</span><span><ShieldCheck size={16} />住房优惠状态</span></div></div>
+      <div className="official-source-row"><BadgeCheck size={16} /><div><strong>信息来源</strong><span>{project.source}</span></div></div>
+      <button className="primary-wide">授权核验申请条件<ArrowRight size={17} /></button>
+      <p className="drawer-footnote">当前为产品 Demo，不会实际提交政府申请。</p>
+    </>
+  );
+}
+
+function PolicyApplication() {
+  const [authorized, setAuthorized] = useState(false);
+  const checks = [["实名认证", "支付宝账户"], ["学历信息", "学信网授权"], ["就业与社保", "政务服务授权"], ["人才认定", "人才会客厅"], ["不动产情况", "政府部门核验"]];
+  return (
+    <>
+      <div className="drawer-title"><span>申请材料智能准备</span><small>一次授权，生成项目所需材料清单</small></div>
+      <div className="application-value"><UserCheck size={24} /><div><strong>少填表、少跑腿、避免漏材料</strong><span>支付宝仅在你授权后调用信息，正式申请仍以政府部门审核为准。</span></div></div>
+      <div className="verification-list">
+        {checks.map(([name, source], index) => <div key={name}><span className={authorized ? "verified" : ""}>{authorized ? <Check size={14} /> : index + 1}</span><div><strong>{name}</strong><small>{source}</small></div><em>{authorized ? "已获取模拟结果" : "待授权"}</em></div>)}
+      </div>
+      {!authorized ? <button className="primary-wide" onClick={() => setAuthorized(true)}>支付宝授权并开始核验</button> : <><div className="verification-result"><Check size={17} /><div><strong>预核验完成</strong><span>初步满足继续申请条件，建议选择具体项目后提交。</span></div></div><button className="primary-wide">选择项目并生成申请表<ArrowRight size={17} /></button></>}
+      <p className="drawer-footnote">预核验结果不代表政府审批结论。</p>
+    </>
+  );
+}
+
+function PolicyProgress() {
+  return (
+    <>
+      <div className="drawer-title"><span>政策住房申请进度</span><small>统一查看不同项目办理状态 · Demo</small></div>
+      <div className="progress-project"><span className="policy-type">人才专项租赁住房</span><strong>潮语贤庭</strong><small>申请编号：HZRC202606120018</small></div>
+      <div className="application-timeline">
+        {[["报名申请", "已完成", "6月10日"], ["资格审核", "审核中", "预计 3 个工作日"], ["摇号 / 选房", "待开始", "以项目通知为准"], ["签约入住", "待开始", "线上签约与缴费"]].map(([name, state, meta], index) => <div className={index < 2 ? "active" : ""} key={name}><i>{index === 0 ? <Check size={13} /> : index + 1}</i><span><strong>{name}</strong><small>{meta}</small></span><em>{state}</em></div>)}
+      </div>
+      <div className="progress-reminder"><Clock3 size={17} /><div><strong>支付宝消息提醒已开启</strong><span>状态变化、补充材料和选房时间将及时提醒。</span></div></div>
     </>
   );
 }

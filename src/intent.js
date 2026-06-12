@@ -82,6 +82,7 @@ export function extractCommunityName(text = "") {
 export function identifyPrompt(text) {
   const normalized = normalize(text);
 
+  if (/保租房|保障性租赁|人才房|人才公寓|人才专项租赁|公租房|蓝领公寓|青荷驿站|申请住房|住房保障/.test(normalized)) return "affordable";
   if (/学区|学校|入学/.test(normalized)) return "school";
   if (isCommunityQuery(text)) return "community";
   if (/公积金.*(租房|房租)|免押|找.*租|想.*租|租房|合租|整租|可租房源/.test(normalized)) return "rent";
