@@ -296,10 +296,16 @@ body { margin: 0; min-width: 320px; min-height: 100vh; overflow: hidden; }
 .community-market-head > div { display: flex; flex-direction: column; gap: 2px; }
 .community-market-head strong { font-size: 13px; }
 .community-market-head span { color: #8a94a6; font-size: 9px; }
-.market-update { margin-left: auto; display: flex; align-items: center; gap: 3px; white-space: nowrap; }
+.community-follow { margin-left: auto; min-height: 28px; border: 1px solid #acd0ff; border-radius: 14px; background: #fff; color: #1677ff; padding: 0 7px; display: flex; align-items: center; gap: 3px; font-size: 8px; white-space: nowrap; }
+.community-follow.followed { background: #1677ff; color: #fff; }
+.market-update { min-height: 24px; padding: 0 13px; background: #fbfcfe; color: #8a94a6; display: flex; align-items: center; gap: 3px; white-space: nowrap; font-size: 8px; }
 .market-tabs { height: 36px; padding: 4px; background: #f3f6fa; display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px; }
 .market-tabs button { border-radius: 4px; background: transparent; color: #778397; font-size: 9px; }
 .market-tabs button.active { background: #fff; color: #1677ff; font-weight: 700; box-shadow: 0 1px 4px rgba(45,62,85,.08); }
+.community-alert-preview { border-top: 1px solid #dceaf8; background: #f3f8ff; color: #1677ff; padding: 8px 10px; display: grid; grid-template-columns: 18px 1fr; align-items: center; gap: 5px; }
+.community-alert-preview div { display: flex; flex-direction: column; gap: 2px; }
+.community-alert-preview strong { color: #415169; font-size: 8px; }
+.community-alert-preview span { color: #8190a3; font-size: 7px; }
 .community-overview { padding: 10px; }
 .market-value-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
 .market-value-grid > div { border-radius: 6px; padding: 10px; display: flex; flex-direction: column; gap: 4px; }
@@ -621,10 +627,13 @@ body { margin: 0; min-width: 320px; min-height: 100vh; overflow: hidden; }
 .calculator-result span, .fund-balance span { color: #69778b; font-size: 10px; }
 .calculator-result strong, .fund-balance strong { color: #1677ff; font-size: 26px; }
 .calculator-result small, .fund-balance small { color: #919cac; font-size: 8px; }
+.calculator-result.invalid { background: #f7f9fc; border-color: #e3e8ef; }
+.calculator-result.invalid strong { color: #69778b; font-size: 17px; }
 .form-row { min-height: 48px; border-bottom: 1px solid #edf1f5; display: flex; align-items: center; justify-content: space-between; font-size: 11px; margin-bottom: 4px; }
 .form-row div { display: flex; align-items: center; gap: 4px; color: #7b8799; }
 .form-row input { width: 74px; height: 31px; border: 1px solid #dce3ec; border-radius: 5px; outline: none; text-align: right; padding: 0 7px; color: #26354b; }
 .service-drawer .primary-wide { margin-top: 16px; }
+.service-drawer .primary-wide:disabled { background: #c8d0dc; cursor: not-allowed; }
 .drawer-footnote { color: #9aa3b1; font-size: 8px; text-align: center; }
 .hub-intro { border: 1px solid #dceaff; border-radius: 8px; background: #f5f9ff; padding: 11px; color: #1677ff; display: grid; grid-template-columns: 25px 1fr; align-items: center; gap: 8px; margin-bottom: 10px; }
 .hub-intro div { display: flex; flex-direction: column; gap: 3px; }

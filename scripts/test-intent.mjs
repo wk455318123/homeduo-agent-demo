@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { extractCommunityName, identifyPrompt } from "../src/intent.js";
 import { matchAffordableProjects } from "../src/policyMatching.js";
 import { resolveCommunityContext } from "../src/conversationContext.js";
+import { matchesRentPrice } from "../src/rentalFilters.js";
 
 const cases = [
   ["万科城市花园租金怎么样", "community", "万科城市花园"],
@@ -61,4 +62,10 @@ assert.deepEqual(
   { communityName: "该小区", nextCommunityContext: "" },
 );
 
-console.log(`Intent regression tests passed: ${cases.length} queries + 3 policy matching + 2 context cases`);
+assert.equal(matchesRentPrice("4,000元内", 3980), true);
+assert.equal(matchesRentPrice("4,000元内", 5200), false);
+assert.equal(matchesRentPrice("4,000-5,000元", 4680), true);
+assert.equal(matchesRentPrice("4,000-5,000元", 5200), false);
+assert.equal(matchesRentPrice("5,000元以上", 5200), true);
+
+console.log(`Intent regression tests passed: ${cases.length} queries + 3 policy matching + 2 context + 5 rental price cases`);

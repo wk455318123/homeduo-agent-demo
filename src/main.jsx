@@ -64,6 +64,7 @@ import {
 import { extractCommunityName, identifyPrompt } from "./intent.js";
 import { matchAffordableProjects } from "./policyMatching.js";
 import { resolveCommunityContext } from "./conversationContext.js";
+import { matchesRentPrice } from "./rentalFilters.js";
 import "./styles.css";
 
 const BLUE = "#1677ff";
@@ -75,6 +76,7 @@ const DATA_UPDATED_DATE = new Intl.DateTimeFormat("zh-CN", {
   day: "2-digit",
 }).format(new Date()).replaceAll("/", ".");
 const DATA_UPDATED_SHORT = `${new Date().getMonth() + 1}月${new Date().getDate()}日`;
+const relativeDeadline = (days, action) => `${days} 天后${action}`;
 
 const trendData = [
   { month: "7月", price: 26890 },
@@ -170,7 +172,7 @@ const affordableProjects = [
     layout: "两室一厅 · 约 57-59㎡",
     status: "关注后续配租公告",
     stage: "即将开放",
-    deadline: "预计 6月28日开放",
+    deadline: relativeDeadline(14, "开放"),
     updated: "今天 09:30",
     sourceLevel: "市级官方平台",
     fit: "高校毕业生 / 各类人才",
@@ -200,7 +202,7 @@ const affordableProjects = [
     layout: "单人间 / 双人间 / 四人间",
     status: "适合新就业群体关注",
     stage: "开放申请中",
-    deadline: "6月20日截止",
+    deadline: relativeDeadline(6, "截止"),
     updated: "今天 08:15",
     sourceLevel: "区级官方平台",
     fit: "产业工人 / 新就业群体",
@@ -224,14 +226,14 @@ const listings = {
 
 const communityHomes = {
   sale: [
-    { title: "万科城市花园 · 89㎡三房", meta: "中层 · 南北通透 · 满五年", price: "306万", unit: "34,382元/㎡", tag: "近参考价", image: "https://images.unsplash.com/photo-1560185008-b033106af5c3?auto=format&fit=crop&w=900&q=80" },
-    { title: "万科城市花园 · 108㎡三房", meta: "高层 · 精装修 · 带车位", price: "386万", unit: "35,741元/㎡", tag: "改善户型", image: "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=900&q=80" },
-    { title: "万科城市花园 · 72㎡两房", meta: "中层 · 朝南 · 近地铁", price: "242万", unit: "33,611元/㎡", tag: "总价较低", image: "https://images.unsplash.com/photo-1484154218962-a197022b5858?auto=format&fit=crop&w=900&q=80" },
+    { title: "万科城市花园 · 89㎡三房", meta: "中层 · 南北通透 · 满五年", price: "306万", unit: "34,382元/㎡", tag: "近参考价", image: "./assets/rent-living.jpg" },
+    { title: "万科城市花园 · 108㎡三房", meta: "高层 · 精装修 · 带车位", price: "386万", unit: "35,741元/㎡", tag: "改善户型", image: "./assets/rent-bedroom.jpg" },
+    { title: "万科城市花园 · 72㎡两房", meta: "中层 · 朝南 · 近地铁", price: "242万", unit: "33,611元/㎡", tag: "总价较低", image: "./assets/rent-studio.jpg" },
   ],
   rent: [
-    { title: "万科城市花园 · 整租两房", meta: "72㎡ · 朝南 · 押一付三", price: "5,300元/月", unit: "可随时看房", tag: "主流租金", image: "https://images.unsplash.com/photo-1502672023488-70e25813eb80?auto=format&fit=crop&w=900&q=80" },
-    { title: "万科城市花园 · 整租三房", meta: "89㎡ · 精装修 · 可月付", price: "6,800元/月", unit: "支持花呗免押", tag: "家庭整租", image: "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=900&q=80" },
-    { title: "万科城市花园 · 品质合租", meta: "主卧 · 独立卫浴 · 包保洁", price: "3,180元/月", unit: "合作平台模拟房源", tag: "预算更轻", image: "https://images.unsplash.com/photo-1493809842364-78817add7ffb?auto=format&fit=crop&w=900&q=80" },
+    { title: "万科城市花园 · 整租两房", meta: "72㎡ · 朝南 · 押一付三", price: "5,300元/月", unit: "可随时看房", tag: "主流租金", image: "./assets/rent-living.jpg" },
+    { title: "万科城市花园 · 整租三房", meta: "89㎡ · 精装修 · 可月付", price: "6,800元/月", unit: "支持花呗免押", tag: "家庭整租", image: "./assets/rent-bedroom.jpg" },
+    { title: "万科城市花园 · 品质合租", meta: "主卧 · 独立卫浴 · 包保洁", price: "3,180元/月", unit: "合作平台模拟房源", tag: "预算更轻", image: "./assets/rent-studio.jpg" },
   ],
 };
 
@@ -248,7 +250,7 @@ const kaRentHomes = [
     price: 4680,
     orientation: "朝南",
     tags: ["毕业生友好", "花呗免押", "可月付", "今日可看"],
-    image: "https://images.unsplash.com/photo-1502672023488-70e25813eb80?auto=format&fit=crop&w=900&q=80",
+    image: "./assets/rent-living.jpg",
     reason: "通勤、预算与独居需求最均衡",
   },
   {
@@ -263,7 +265,7 @@ const kaRentHomes = [
     price: 4980,
     orientation: "朝南",
     tags: ["毕业生友好", "平台核验", "近地铁", "VR看房"],
-    image: "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=900&q=80",
+    image: "./assets/rent-bedroom.jpg",
     reason: "距离公司近，房源信息已由平台核验",
   },
   {
@@ -278,7 +280,7 @@ const kaRentHomes = [
     price: 3280,
     orientation: "带独立卫浴",
     tags: ["个人房源", "独立卫浴", "可月付"],
-    image: "https://images.unsplash.com/photo-1493809842364-78817add7ffb?auto=format&fit=crop&w=900&q=80",
+    image: "./assets/rent-studio.jpg",
     reason: "预算更轻，个人房源需进一步核验",
   },
   {
@@ -293,7 +295,7 @@ const kaRentHomes = [
     price: 5480,
     orientation: "南北通透",
     tags: ["平台核验", "近地铁", "双卧室"],
-    image: "https://images.unsplash.com/photo-1560185008-b033106af5c3?auto=format&fit=crop&w=900&q=80",
+    image: "./assets/rent-living.jpg",
     reason: "适合两人合租或需要独立书房",
   },
   {
@@ -308,7 +310,7 @@ const kaRentHomes = [
     price: 4380,
     orientation: "带阳台",
     tags: ["经纪人房源", "空间更大", "民水民电"],
-    image: "https://images.unsplash.com/photo-1484154218962-a197022b5858?auto=format&fit=crop&w=900&q=80",
+    image: "./assets/rent-studio.jpg",
     reason: "同预算获得更大的居住空间",
   },
   {
@@ -323,7 +325,7 @@ const kaRentHomes = [
     price: 5200,
     orientation: "挑高复式",
     tags: ["毕业生友好", "公寓", "近地铁", "随时看房"],
-    image: "https://images.unsplash.com/photo-1493809842364-78817add7ffb?auto=format&fit=crop&w=900&q=80",
+    image: "./assets/rent-studio.jpg",
     reason: "通勤距离短，适合偏好公寓居住体验",
   },
   {
@@ -338,7 +340,7 @@ const kaRentHomes = [
     price: 3480,
     orientation: "朝南带阳台",
     tags: ["平台核验", "近地铁", "可月付"],
-    image: "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=900&q=80",
+    image: "./assets/rent-bedroom.jpg",
     reason: "地铁通勤稳定，合租房间面积较大",
   },
   {
@@ -353,7 +355,7 @@ const kaRentHomes = [
     price: 5050,
     orientation: "朝南",
     tags: ["个人房源", "无中介费", "可养宠"],
-    image: "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=900&q=80",
+    image: "./assets/rent-bedroom.jpg",
     reason: "个人房源费用更轻，但需确认真实状态",
   },
   {
@@ -368,7 +370,7 @@ const kaRentHomes = [
     price: 4250,
     orientation: "朝东",
     tags: ["经纪人房源", "精装修", "拎包入住"],
-    image: "https://images.unsplash.com/photo-1484154218962-a197022b5858?auto=format&fit=crop&w=900&q=80",
+    image: "./assets/rent-studio.jpg",
     reason: "预算适中，通勤和独居体验较均衡",
   },
 ];
@@ -1018,18 +1020,21 @@ function CommunityAnswer({ query, communityName = "万科城市花园", onServic
 
 function CommunityMarketCard({ communityName }) {
   const [tab, setTab] = useState("overview");
+  const [followed, setFollowed] = useState(false);
   return (
     <section className="community-market-card">
       <div className="community-market-head">
         <div><strong>{communityName}</strong><span>二手房与租赁市场 · 模拟数据</span></div>
-        <span className="market-update"><Clock3 size={12} />更新至 {DATA_UPDATED_DATE}</span>
+        <button className={followed ? "community-follow followed" : "community-follow"} onClick={() => setFollowed(!followed)}>{followed ? <Check size={12} /> : <BellRing size={12} />}{followed ? "已关注" : "关注小区"}</button>
       </div>
+      <span className="market-update"><Clock3 size={12} />更新至 {DATA_UPDATED_DATE}</span>
       <div className="market-tabs">
         {[["overview", "市场总览"], ["sale", "二手房价"], ["rent", "租金行情"]].map(([id, label]) => <button className={tab === id ? "active" : ""} key={id} onClick={() => setTab(id)}>{label}</button>)}
       </div>
       {tab === "overview" && <CommunityOverview />}
       {tab === "sale" && <CommunitySaleTrend />}
       {tab === "rent" && <CommunityRentTrend />}
+      {followed && <div className="community-alert-preview"><BellRing size={14} /><div><strong>支付宝消息提醒已开启</strong><span>参考价明显变化、新增房源或租金更新时通知你。</span></div></div>}
     </section>
   );
 }
@@ -1406,7 +1411,7 @@ function RentalMarketplace() {
     const result = kaRentHomes.filter((home) =>
       (partner === "全部" || home.partner === partner) &&
       (location === "全部区域" || home.location === location) &&
-      (price === "不限租金" || price === "4,000元内" && home.price <= 4000 || price === "4,000-5,000元" && home.price > 4000 && home.price <= 5000 || price === "5,000元以上" && home.price > 5000) &&
+      matchesRentPrice(price, home.price) &&
       (layout === "全部户型" || home.layout === layout) &&
       extraFilters.every((filter) => matchesExtraFilter(home, filter)) &&
       (!query.trim() || `${home.title}${home.location}${home.layout}${home.partner}${home.tags.join("")}`.includes(query.trim()))
@@ -1744,22 +1749,30 @@ function RentDetail({ home }) {
 }
 
 function Mortgage() {
-  const [price, setPrice] = useState(300);
-  const [down, setDown] = useState(30);
-  const [years, setYears] = useState(30);
+  const [price, setPrice] = useState("300");
+  const [down, setDown] = useState("30");
+  const [years, setYears] = useState("30");
   const [showPlan, setShowPlan] = useState(false);
-  const loan = price * (1 - down / 100);
+  const priceValue = Number(price);
+  const downValue = Number(down);
+  const yearsValue = Number(years);
+  const valid = Number.isFinite(priceValue) && priceValue > 0 && Number.isFinite(downValue) && downValue >= 0 && downValue < 100 && Number.isFinite(yearsValue) && yearsValue > 0;
+  const loan = valid ? priceValue * (1 - downValue / 100) : 0;
   const monthlyRate = 3.1 / 100 / 12;
-  const months = years * 12;
-  const payment = useMemo(() => (loan * 10000 * monthlyRate * Math.pow(1 + monthlyRate, months)) / (Math.pow(1 + monthlyRate, months) - 1), [loan, months]);
+  const months = valid ? yearsValue * 12 : 0;
+  const payment = useMemo(() => {
+    if (!valid || months <= 0) return 0;
+    const factor = Math.pow(1 + monthlyRate, months);
+    return (loan * 10000 * monthlyRate * factor) / (factor - 1);
+  }, [loan, months, valid]);
   return (
     <>
       <div className="drawer-title"><span>房贷计算器</span><small>快速判断舒适预算</small></div>
-      <div className="calculator-result"><span>预计每月还款</span><strong>¥ {Math.round(payment).toLocaleString()}</strong><small>商业贷款 {loan.toFixed(0)} 万 · 等额本息</small></div>
-      <div className="form-row"><label>房屋总价</label><div><input type="number" value={price} onChange={(e) => setPrice(Number(e.target.value))} /><span>万元</span></div></div>
-      <div className="form-row"><label>首付比例</label><div><input type="number" value={down} onChange={(e) => setDown(Number(e.target.value))} /><span>%</span></div></div>
-      <div className="form-row"><label>贷款期限</label><div><input type="number" value={years} onChange={(e) => setYears(Number(e.target.value))} /><span>年</span></div></div>
-      <button className="primary-wide" onClick={() => setShowPlan(true)}>查看公积金组合贷方案<ArrowRight size={17} /></button>
+      <div className={`calculator-result ${valid ? "" : "invalid"}`}><span>预计每月还款</span><strong>{valid ? `¥ ${Math.round(payment).toLocaleString()}` : "请完善测算参数"}</strong><small>{valid ? `商业贷款 ${loan.toFixed(0)} 万 · 等额本息` : "总价需大于 0，首付低于 100%，期限需大于 0"}</small></div>
+      <div className="form-row"><label>房屋总价</label><div><input aria-label="房屋总价" type="number" min="1" value={price} onChange={(e) => setPrice(e.target.value)} /><span>万元</span></div></div>
+      <div className="form-row"><label>首付比例</label><div><input aria-label="首付比例" type="number" min="0" max="99" value={down} onChange={(e) => setDown(e.target.value)} /><span>%</span></div></div>
+      <div className="form-row"><label>贷款期限</label><div><input aria-label="贷款期限" type="number" min="1" max="40" value={years} onChange={(e) => setYears(e.target.value)} /><span>年</span></div></div>
+      <button className="primary-wide" disabled={!valid} onClick={() => setShowPlan(true)}>查看公积金组合贷方案<ArrowRight size={17} /></button>
       {showPlan && <div className="application-generated"><Calculator size={17} /><div><strong>组合贷方案已生成</strong><span>模拟方案：公积金贷款 65 万，其余使用商业贷款；实际额度与利率以审批为准。</span></div></div>}
       <p className="drawer-footnote">利率与测算结果仅供参考，实际以贷款机构审批为准。</p>
     </>
