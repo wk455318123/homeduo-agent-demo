@@ -422,7 +422,7 @@ function App() {
     <div className="app-shell">
       <DesktopNav onService={openService} onReset={resetConversation} />
       <main className="agent-column">
-        <Header onService={openService} onReset={resetConversation} />
+        <Header onService={openService} onReset={resetConversation} showBack={messages.length > 0} />
         <section className="chat-scroll" ref={scrollRef}>
           {messages.length === 0 ? (
             <Welcome onAsk={ask} onService={openService} />
@@ -446,7 +446,7 @@ function App() {
         <Composer value={input} setValue={setInput} onSend={() => ask(input)} onService={openService} />
       </main>
       <JourneyPanel journey={journey} onService={openService} onReset={resetConversation} />
-      <BottomNav onService={openService} onReset={resetConversation} />
+      <BottomNav drawer={drawer} onService={openService} onReset={resetConversation} />
       {!consent && <Consent onAccept={() => setConsent(true)} />}
       {drawer && <ServiceDrawer type={drawer} onClose={() => setDrawer(null)} onNavigate={setDrawer} />}
     </div>
@@ -467,10 +467,10 @@ function DesktopNav({ onService, onReset }) {
   );
 }
 
-function Header({ onService, onReset }) {
+function Header({ onService, onReset, showBack }) {
   return (
     <header className="app-header">
-      <button className="icon-button mobile-back" aria-label="返回" onClick={onReset}><ArrowLeft size={20} /></button>
+      {showBack && <button className="icon-button mobile-back" aria-label="返回" onClick={onReset}><ArrowLeft size={20} /></button>}
       <div className="header-title">
         <div className="agent-logo"><Home size={17} /></div>
         <div><strong>房多多 Agent</strong><span>杭州 · 模拟数据演示</span></div>
@@ -513,7 +513,7 @@ function Welcome({ onAsk, onService }) {
       <section className="welcome-service-section">
         <div className="welcome-section-title"><strong>常用服务</strong><span>在支付宝里继续办理</span></div>
         <div className="welcome-services">
-          <button onClick={() => onService("buy-listings")}><span><Search size={18} /></span><strong>找房源</strong></button>
+          <button onClick={() => onService("buy-listings")}><span><Search size={18} /></span><strong>看二手房</strong></button>
           <button onClick={() => onService("affordable-projects")}><span><ShieldCheck size={18} /></span><strong>政策住房</strong></button>
           <button onClick={() => onService("mortgage")}><span><Calculator size={18} /></span><strong>算月供</strong></button>
           <button onClick={() => onService("fund")}><span><Landmark size={18} /></span><strong>查公积金</strong></button>
@@ -1285,6 +1285,8 @@ function renderServiceContent(drawerType, request, onNavigate) {
     "affordable-apply": () => <PolicyApplication />,
     "affordable-progress": () => <PolicyProgress />,
     "affordable-project-detail": () => <PolicyProjectDetail project={request.project} />,
+    "listing-center": () => <HousingHub mode="listing" onNavigate={onNavigate} />,
+    "service-center": () => <HousingHub mode="service" onNavigate={onNavigate} />,
   };
 
   return renderers[drawerType]?.() ?? <GenericService type={drawerType} request={request} />;
@@ -1747,6 +1749,41 @@ function Fund() {
   );
 }
 
+function HousingHub({ mode, onNavigate }) {
+  const listingItems = [
+    { icon: Home, title: "看二手房", sub: "按区域、预算与户型浏览模拟在售房源", type: "buy-listings" },
+    { icon: Building2, title: "多平台租房", sub: "聚合贝壳、自如、安居客等合作供给", type: "rent-market" },
+    { icon: ShieldCheck, title: "政策住房", sub: "查看保租房、人才房与蓝领公寓公告", type: "affordable-projects" },
+  ];
+  const serviceItems = [
+    { icon: Landmark, title: "公积金查询", sub: "查询余额、贷款额度与租房提取", type: "fund" },
+    { icon: Calculator, title: "房贷计算器", sub: "测算首付、月供与组合贷方案", type: "mortgage" },
+    { icon: Clock3, title: "政策住房进度", sub: "查看审核、选房、签约与入住服务", type: "affordable-progress" },
+    { icon: BellRing, title: "住房消息订阅", sub: "接收政策项目开放与截止提醒", type: "affordable-alerts" },
+  ];
+  const listingMode = mode === "listing";
+  const items = listingMode ? listingItems : serviceItems;
+  return (
+    <>
+      <div className="drawer-title"><span>{listingMode ? "找房频道" : "支付宝住房服务"}</span><small>{listingMode ? "聚合买房、租房与政策住房供给" : "查询、测算、申请与入住服务统一承接"}</small></div>
+      <div className="hub-intro">
+        {listingMode ? <Search size={22} /> : <Sparkles size={22} />}
+        <div><strong>{listingMode ? "先选择想找的住房类型" : "从房产问答继续把事情办完"}</strong><span>{listingMode ? "每类房源都会明确标注来源与模拟状态。" : "服务结果与办理状态将在对应页面清晰说明。"}</span></div>
+      </div>
+      <div className="hub-list">
+        {items.map(({ icon: Icon, title, sub, type }) => (
+          <button key={type} onClick={() => onNavigate(type)}>
+            <span><Icon size={19} /></span>
+            <div><strong>{title}</strong><small>{sub}</small></div>
+            <ChevronRight size={16} />
+          </button>
+        ))}
+      </div>
+      <p className="drawer-footnote">当前为产品 Demo，房源与办理结果均为模拟展示。</p>
+    </>
+  );
+}
+
 function GenericService({ type, request }) {
   const [activated, setActivated] = useState(false);
   const communityName = typeof request === "object" && request.communityName && request.communityName !== "该小区" ? request.communityName : "万科城市花园";
@@ -1776,8 +1813,12 @@ function GenericService({ type, request }) {
   );
 }
 
-function BottomNav({ onService, onReset }) {
-  return <nav className="bottom-nav"><button className="active" onClick={onReset}><Sparkles size={20} /><span>问房</span></button><button onClick={() => onService("buy-listings")}><Search size={20} /><span>找房</span></button><button onClick={() => onService("fund")}><WalletCards size={20} /><span>服务</span></button><button onClick={() => onService("profile")}><Menu size={20} /><span>我的</span></button></nav>;
+function BottomNav({ drawer, onService, onReset }) {
+  const drawerType = typeof drawer === "string" ? drawer : drawer?.type;
+  const listingTypes = ["listing-center", "buy-listings", "rent-listings", "rent-market", "rent-detail", "community-sale-listings", "community-rent-listings"];
+  const serviceTypes = ["service-center", "fund", "mortgage", "deposit", "affordable-projects", "affordable-alerts", "affordable-apply", "affordable-progress", "affordable-project-detail", "school-policy", "amenities"];
+  const active = drawerType === "profile" ? "profile" : listingTypes.includes(drawerType) ? "listing" : serviceTypes.includes(drawerType) ? "service" : "ask";
+  return <nav className="bottom-nav"><button className={active === "ask" ? "active" : ""} onClick={onReset}><Sparkles size={20} /><span>问房</span></button><button className={active === "listing" ? "active" : ""} onClick={() => onService("listing-center")}><Search size={20} /><span>找房</span></button><button className={active === "service" ? "active" : ""} onClick={() => onService("service-center")}><WalletCards size={20} /><span>服务</span></button><button className={active === "profile" ? "active" : ""} onClick={() => onService("profile")}><Menu size={20} /><span>我的</span></button></nav>;
 }
 
 createRoot(document.getElementById("root")).render(<App />);
