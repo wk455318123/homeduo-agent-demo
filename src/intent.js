@@ -87,6 +87,7 @@ export function extractCommunityName(text = "") {
 export function identifyPrompt(text) {
   const normalized = normalize(text);
 
+  if (/(应届|毕业生|大学生|高校毕业).*(租房|安居|补贴|免押)|租房.*(应届|毕业生|大学生|高校毕业)/.test(normalized)) return "graduate-rent";
   if (/申请进度|审核进度|选房进度|报名进度/.test(normalized)) return "policy-progress";
   if (/(人才房|保租房|公租房|蓝领公寓|政策住房).*(材料|资料|证明)|申请材料/.test(normalized)) return "policy-materials";
   if (/开放.*项目|项目.*开放|正在开放|政策住房项目/.test(normalized)) return "policy-projects";

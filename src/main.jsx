@@ -128,8 +128,9 @@ const communityRentData = [
 const prompts = [
   { id: "trend", label: "杭州最近房价什么走势？", sub: "查看城市价格趋势与市场变化", icon: TrendingDown },
   { id: "budget", label: "300万预算，余杭和萧山怎么选？", sub: "预算选区", icon: WalletCards },
-  { id: "rent", label: "我想在杭州租房，帮我找找", sub: "多平台租房", icon: Building2 },
+  { id: "graduate-rent", label: "应届毕业生在杭州租房怎么更省？", sub: "毕业生安居", icon: GraduationCap },
   { id: "affordable", label: "我能申请杭州保租房或人才房吗？", sub: "政策住房", icon: ShieldCheck },
+  { id: "rent", label: "我想在杭州租房，帮我找找", sub: "多平台租房", icon: Building2 },
   { id: "community", label: "万科城市花园二手房价和租金？", sub: "小区行情", icon: Home },
   { id: "school", label: "万科城市花园学区怎么样？", sub: "入学政策", icon: CircleHelp },
 ];
@@ -138,6 +139,7 @@ const suggestions = {
   trend: ["300万预算适合看哪里？", "看看余杭和萧山对比", "我能贷多少钱？"],
   budget: ["查看余杭在售房源", "按我的收入算月供", "余杭最近房价走势"],
   rent: ["怎么提取公积金付房租？", "合作平台房源支持免押吗？", "想住得离公司更近"],
+  "graduate-rent": ["我能申请毕业生租房补贴吗？", "看看适合毕业生的房源", "花呗免押怎么用？"],
   community: ["这个小区近半年成交怎么样？", "查看该小区出租房源", "算一算租售比"],
   affordable: ["查看正在开放的项目", "人才房需要哪些材料？", "查询我的申请进度"],
   school: ["查询杭州入学政策", "看看小区生活便利度", "查看周边在售房源"],
@@ -149,6 +151,9 @@ const directFollowupServices = {
   "按我的收入算月供": "mortgage",
   "怎么提取公积金付房租？": "fund",
   "合作平台房源支持免押吗？": "deposit",
+  "我能申请毕业生租房补贴吗？": "graduate-rent-center",
+  "看看适合毕业生的房源": "rent-market",
+  "花呗免押怎么用？": "deposit",
   "查看正在开放的项目": "affordable-projects",
   "人才房需要哪些材料？": "affordable-apply",
   "查询我的申请进度": "affordable-progress",
@@ -170,6 +175,7 @@ const affordableProjects = [
     sourceLevel: "市级官方平台",
     fit: "高校毕业生 / 各类人才",
     source: "杭州市住房租赁公众服务平台",
+    operator: "项目运营方以最新公告为准",
   },
   {
     name: "宸寓·如栖兰庭",
@@ -184,6 +190,7 @@ const affordableProjects = [
     sourceLevel: "区级运营公告",
     fit: "在杭就业人才",
     source: "杭州市住房租赁公众服务平台",
+    operator: "运营品牌：宸寓",
   },
   {
     name: "宁巢·钱塘蓝领公寓",
@@ -198,6 +205,7 @@ const affordableProjects = [
     sourceLevel: "区级官方平台",
     fit: "产业工人 / 新就业群体",
     source: "杭州市住房租赁公众服务平台",
+    operator: "运营品牌：宁巢",
   },
 ];
 
@@ -239,7 +247,7 @@ const kaRentHomes = [
     area: "42㎡",
     price: 4680,
     orientation: "朝南",
-    tags: ["花呗免押", "可月付", "今日可看"],
+    tags: ["毕业生友好", "花呗免押", "可月付", "今日可看"],
     image: "https://images.unsplash.com/photo-1502672023488-70e25813eb80?auto=format&fit=crop&w=900&q=80",
     reason: "通勤、预算与独居需求最均衡",
   },
@@ -254,7 +262,7 @@ const kaRentHomes = [
     area: "46㎡",
     price: 4980,
     orientation: "朝南",
-    tags: ["平台核验", "近地铁", "VR看房"],
+    tags: ["毕业生友好", "平台核验", "近地铁", "VR看房"],
     image: "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=900&q=80",
     reason: "距离公司近，房源信息已由平台核验",
   },
@@ -314,7 +322,7 @@ const kaRentHomes = [
     area: "52㎡",
     price: 5200,
     orientation: "挑高复式",
-    tags: ["公寓", "近地铁", "随时看房"],
+    tags: ["毕业生友好", "公寓", "近地铁", "随时看房"],
     image: "https://images.unsplash.com/photo-1493809842364-78817add7ffb?auto=format&fit=crop&w=900&q=80",
     reason: "通勤距离短，适合偏好公寓居住体验",
   },
@@ -568,6 +576,7 @@ function AgentAnswer({ id, query, communityName, onAsk, onService, animate = fal
     trend: <TrendAnswer query={query} onService={onService} />,
     budget: <BudgetAnswer query={query} onService={onService} />,
     rent: <RentAnswer onService={onService} />,
+    "graduate-rent": <GraduateRentAnswer onService={onService} />,
     community: <CommunityAnswer query={query} communityName={communityName} onService={onService} />,
     affordable: <AffordableHousingAnswer onService={onService} />,
     school: <SchoolAnswer communityName={communityName} onService={onService} />,
@@ -753,10 +762,42 @@ function RentAnswer({ onService }) {
       <RentalMatchFlow onService={onService} />
       <ServiceActions title="支付宝里继续租" actions={[
         { icon: Search, title: "浏览全部平台房源", sub: "多供给方聚合展示", type: "rent-market" },
+        { icon: GraduationCap, title: "毕业生安居方案", sub: "补贴、人才房与免押组合", type: "graduate-rent-center" },
         { icon: ShieldCheck, title: "花呗免押", sub: "减少入住资金压力", type: "deposit" },
         { icon: Landmark, title: "公积金付房租", sub: "查询可提取额度", type: "fund" },
       ]} onService={onService} />
       <div className="source-note"><span>模拟聚合供给：贝壳租房、安居客、58同城、自如、我爱我家等</span><span>支付宝负责需求理解与聚合呈现，房源价格和可租状态以各供给方实时信息为准。</span></div>
+    </>
+  );
+}
+
+function GraduateRentAnswer({ onService }) {
+  return (
+    <>
+      <div className="answer-copy">
+        <strong>应届毕业生租房，不只要比租金，还要先把能享受的安居权益用上。</strong>
+        <p>支付宝可以先协助判断毕业生租房补贴与政策住房方向，再聚合运营商和市场化平台房源，并把花呗免押、公积金租房提取与缴租提醒接到签约后。</p>
+      </div>
+      <section className="graduate-plan-card">
+        <div className="graduate-plan-head">
+          <span><GraduationCap size={20} /></span>
+          <div><strong>毕业生安居组合方案</strong><small>杭州 · 首次来杭就业租房场景</small></div>
+          <em>4项权益</em>
+        </div>
+        <div className="graduate-plan-steps">
+          <div><i>1</i><span><strong>先核验政策权益</strong><small>毕业生租房补贴、人才专项租赁住房等</small></span></div>
+          <div><i>2</i><span><strong>再比较不同供给</strong><small>政府项目、住房租赁运营商、合作平台房源</small></span></div>
+          <div><i>3</i><span><strong>降低首次入住成本</strong><small>符合条件的合作房源可尝试花呗免押</small></span></div>
+          <div><i>4</i><span><strong>入住后继续服务</strong><small>公积金提取、缴租与合同到期提醒</small></span></div>
+        </div>
+        <button className="graduate-plan-action" onClick={() => onService("graduate-rent-center")}>生成我的毕业生安居方案<ArrowRight size={15} /></button>
+      </section>
+      <ServiceActions title="可以直接开始" actions={[
+        { icon: GraduationCap, title: "核验毕业生安居权益", sub: "政策资格以官方结果为准", type: "graduate-rent-center" },
+        { icon: Building2, title: "浏览运营商与平台房源", sub: "来源、费用与免押状态清晰展示", type: "rent-market" },
+        { icon: ShieldCheck, title: "查看花呗免押", sub: "降低首次入住资金压力", type: "deposit" },
+      ]} onService={onService} />
+      <div className="source-note"><span>政策服务参考杭州官方渠道，资格、补贴金额与办理结果以实时官方核验为准。</span><span>运营商及平台房源由对应供给方承接，支付宝负责聚合展示与后续服务衔接。</span></div>
     </>
   );
 }
@@ -1127,7 +1168,7 @@ function PolicyProjectCard({ project, onOpen }) {
   return (
     <button className="policy-project-card" onClick={onOpen}>
       <span className="policy-card-labels"><span className="policy-type">{project.type}</span><i className={project.stage === "开放申请中" ? "open" : ""}>{project.stage}</i></span>
-      <span className="policy-project-copy"><strong>{project.name}</strong><small><MapPin size={11} />{project.area} · {project.layout}</small><em>{project.rent}</em><small className="policy-update"><RefreshCw size={10} />更新于 {project.updated}</small></span>
+      <span className="policy-project-copy"><strong>{project.name}</strong><small><MapPin size={11} />{project.area} · {project.layout}</small><em>{project.rent}</em><small className="policy-operator"><Building2 size={10} />{project.operator}</small><small className="policy-update"><RefreshCw size={10} />更新于 {project.updated}</small></span>
       <span className="policy-project-status"><b>{project.deadline}</b><ChevronRight size={15} /></span>
     </button>
   );
@@ -1285,6 +1326,7 @@ function renderServiceContent(drawerType, request, onNavigate) {
     "affordable-apply": () => <PolicyApplication />,
     "affordable-progress": () => <PolicyProgress />,
     "affordable-project-detail": () => <PolicyProjectDetail project={request.project} />,
+    "graduate-rent-center": () => <GraduateRentCenter onNavigate={onNavigate} />,
     "listing-center": () => <HousingHub mode="listing" onNavigate={onNavigate} />,
     "service-center": () => <HousingHub mode="service" onNavigate={onNavigate} />,
   };
@@ -1353,7 +1395,7 @@ function RentalMarketplace() {
   const [service, setService] = useState("");
   const cycle = (current, options, setter) => setter(options[(options.indexOf(current) + 1) % options.length]);
   const partners = ["全部", "贝壳租房", "安居客", "58同城", "自如", "我爱我家"];
-  const extraOptions = ["整租", "合租", "公寓", "个人房源", "平台核验", "近地铁", "可月付", "无中介费"];
+  const extraOptions = ["毕业生友好", "整租", "合租", "公寓", "个人房源", "平台核验", "近地铁", "可月付", "无中介费"];
   const matchesExtraFilter = (home, filter) => {
     if (filter === "整租") return home.layout.startsWith("整租");
     if (filter === "合租") return home.layout.includes("合租");
@@ -1585,6 +1627,7 @@ function PolicyProjectDetail({ project }) {
         <span><BadgeCheck size={15} /><strong>{project.sourceLevel}</strong><small>来源层级</small></span>
       </div>
       <div className="policy-detail-section"><strong>适合人群</strong><p>{project.fit}</p></div>
+      <div className="policy-detail-section"><strong>运营服务主体</strong><p>{project.operator}。项目咨询、看房、签约和入住服务通常由具体运营主体承接，实际以最新公告为准。</p></div>
       <div className="policy-detail-section"><strong>常见准入核验项</strong><div className="requirement-grid"><span><BriefcaseBusiness size={16} />劳动关系 / 社保</span><span><FileCheck2 size={16} />居住证或户籍</span><span><Home size={16} />家庭住房情况</span><span><ShieldCheck size={16} />住房优惠状态</span></div></div>
       <div className="official-source-row"><BadgeCheck size={16} /><div><strong>模拟结构化官方公告</strong><span>{project.source} · Demo 更新于 {project.updated}</span></div></div>
       <button className={`secondary-wide policy-subscribe-button ${subscribed ? "active" : ""}`} onClick={() => setSubscribed(!subscribed)}>{subscribed ? <><Check size={16} />已订阅项目变化</> : <><BellRing size={16} />订阅开放与截止提醒</>}</button>
@@ -1749,13 +1792,51 @@ function Fund() {
   );
 }
 
+function GraduateRentCenter({ onNavigate }) {
+  const [verified, setVerified] = useState(false);
+  const [saved, setSaved] = useState(false);
+  return (
+    <>
+      <div className="drawer-title"><span>毕业生安居服务</span><small>先核验权益，再组合房源与入住服务</small></div>
+      <div className="graduate-center-hero">
+        <GraduationCap size={25} />
+        <div><strong>首次来杭租房，可以少付一点、少跑几步</strong><span>支付宝聚合官方政策入口、运营商房源和市场化平台服务，办理结果以对应服务方为准。</span></div>
+      </div>
+      <div className="graduate-check-card">
+        <div><strong>毕业生安居权益预核验</strong><small>模拟判断，不代表政府审核结论</small></div>
+        {!verified ? <button onClick={() => setVerified(true)}>授权预核验</button> : <span><Check size={13} />已生成建议</span>}
+      </div>
+      {verified && <div className="graduate-result">
+        <div><Check size={16} /><span><strong>建议优先核验毕业生租房补贴</strong><small>补贴资格、金额与续发条件以杭州官方服务实时结果为准。</small></span></div>
+        <div><Check size={16} /><span><strong>同步关注人才专项租赁住房</strong><small>项目申请时间、准入条件与运营主体以最新公告为准。</small></span></div>
+      </div>}
+      <div className="operator-section">
+        <div className="operator-title"><strong>三类租房供给一起比较</strong><span>不仅看价格，也看服务与入住成本</span></div>
+        <button onClick={() => onNavigate("affordable-projects")}><span className="operator-mark government"><ShieldCheck size={17} /></span><div><strong>政府政策住房项目</strong><small>人才专项租赁住房、保租房等，官方公告发布，具体运营主体承接服务</small></div><ChevronRight size={16} /></button>
+        <button onClick={() => onNavigate("rent-market")}><span className="operator-mark operator"><Building2 size={17} /></span><div><strong>住房租赁运营商</strong><small>集中式公寓、品牌长租社区，重点比较管理、维修和签约服务</small></div><ChevronRight size={16} /></button>
+        <button onClick={() => onNavigate("rent-market")}><span className="operator-mark platform"><Search size={17} /></span><div><strong>市场化合作平台</strong><small>聚合经纪机构与个人房源，明确展示来源、核验状态和费用</small></div><ChevronRight size={16} /></button>
+      </div>
+      <div className="graduate-service-grid">
+        <button onClick={() => onNavigate("deposit")}><ShieldCheck size={18} /><strong>花呗免押</strong><small>符合条件的合作房源可尝试降低押金压力</small></button>
+        <button onClick={() => onNavigate("fund")}><Landmark size={18} /><strong>公积金租房提取</strong><small>授权后查看可提取额度与办理材料</small></button>
+        <button onClick={() => onNavigate("affordable-alerts")}><BellRing size={18} /><strong>政策开放提醒</strong><small>项目开放、截止和补材料及时通知</small></button>
+        <button onClick={() => setSaved(true)}><CalendarClock size={18} /><strong>缴租与合同提醒</strong><small>入住后提醒缴费和合同到期时间</small></button>
+      </div>
+      {saved && <ActionFeedback text="已开启缴租与合同提醒（Demo）" />}
+      <p className="drawer-footnote">当前为产品 Demo；政策、房源、免押资格及运营服务均以对应官方或供给方实际结果为准。</p>
+    </>
+  );
+}
+
 function HousingHub({ mode, onNavigate }) {
   const listingItems = [
+    { icon: GraduationCap, title: "毕业生安居", sub: "组合政策权益、运营商房源与免押服务", type: "graduate-rent-center" },
     { icon: Home, title: "看二手房", sub: "按区域、预算与户型浏览模拟在售房源", type: "buy-listings" },
     { icon: Building2, title: "多平台租房", sub: "聚合贝壳、自如、安居客等合作供给", type: "rent-market" },
     { icon: ShieldCheck, title: "政策住房", sub: "查看保租房、人才房与蓝领公寓公告", type: "affordable-projects" },
   ];
   const serviceItems = [
+    { icon: GraduationCap, title: "毕业生安居服务", sub: "核验租房补贴、人才住房与免押权益", type: "graduate-rent-center" },
     { icon: Landmark, title: "公积金查询", sub: "查询余额、贷款额度与租房提取", type: "fund" },
     { icon: Calculator, title: "房贷计算器", sub: "测算首付、月供与组合贷方案", type: "mortgage" },
     { icon: Clock3, title: "政策住房进度", sub: "查看审核、选房、签约与入住服务", type: "affordable-progress" },
@@ -1816,7 +1897,7 @@ function GenericService({ type, request }) {
 function BottomNav({ drawer, onService, onReset }) {
   const drawerType = typeof drawer === "string" ? drawer : drawer?.type;
   const listingTypes = ["listing-center", "buy-listings", "rent-listings", "rent-market", "rent-detail", "community-sale-listings", "community-rent-listings"];
-  const serviceTypes = ["service-center", "fund", "mortgage", "deposit", "affordable-projects", "affordable-alerts", "affordable-apply", "affordable-progress", "affordable-project-detail", "school-policy", "amenities"];
+  const serviceTypes = ["service-center", "graduate-rent-center", "fund", "mortgage", "deposit", "affordable-projects", "affordable-alerts", "affordable-apply", "affordable-progress", "affordable-project-detail", "school-policy", "amenities"];
   const active = drawerType === "profile" ? "profile" : listingTypes.includes(drawerType) ? "listing" : serviceTypes.includes(drawerType) ? "service" : "ask";
   return <nav className="bottom-nav"><button className={active === "ask" ? "active" : ""} onClick={onReset}><Sparkles size={20} /><span>问房</span></button><button className={active === "listing" ? "active" : ""} onClick={() => onService("listing-center")}><Search size={20} /><span>找房</span></button><button className={active === "service" ? "active" : ""} onClick={() => onService("service-center")}><WalletCards size={20} /><span>服务</span></button><button className={active === "profile" ? "active" : ""} onClick={() => onService("profile")}><Menu size={20} /><span>我的</span></button></nav>;
 }
