@@ -77,6 +77,11 @@ const DATA_UPDATED_DATE = new Intl.DateTimeFormat("zh-CN", {
 }).format(new Date()).replaceAll("/", ".");
 const DATA_UPDATED_SHORT = `${new Date().getMonth() + 1}月${new Date().getDate()}日`;
 const relativeDeadline = (days, action) => `${days} 天后${action}`;
+const demoScripts = {
+  graduate: { label: "毕业生安居", query: "应届毕业生在杭州租房怎么更省？", intent: "graduate-rent", service: "graduate-rent-center" },
+  community: { label: "小区行情", query: "万科城市花园二手房价和租金怎么样？", intent: "community" },
+  policy: { label: "政策住房", query: "我能申请杭州保租房或人才房吗？", intent: "affordable", service: "affordable-projects" },
+};
 
 const trendData = [
   { month: "7月", price: 26890 },
@@ -250,7 +255,7 @@ const kaRentHomes = [
     price: 4680,
     orientation: "朝南",
     tags: ["毕业生友好", "花呗免押", "可月付", "今日可看"],
-    image: "./assets/rent-living.jpg",
+    image: "./assets/rent-studio-bright.jpg",
     reason: "通勤、预算与独居需求最均衡",
   },
   {
@@ -265,7 +270,7 @@ const kaRentHomes = [
     price: 4980,
     orientation: "朝南",
     tags: ["毕业生友好", "平台核验", "近地铁", "VR看房"],
-    image: "./assets/rent-bedroom.jpg",
+    image: "./assets/rent-living-balcony.jpg",
     reason: "距离公司近，房源信息已由平台核验",
   },
   {
@@ -280,7 +285,7 @@ const kaRentHomes = [
     price: 3280,
     orientation: "带独立卫浴",
     tags: ["个人房源", "独立卫浴", "可月付"],
-    image: "./assets/rent-studio.jpg",
+    image: "./assets/rent-bedroom-green.jpg",
     reason: "预算更轻，个人房源需进一步核验",
   },
   {
@@ -295,7 +300,7 @@ const kaRentHomes = [
     price: 5480,
     orientation: "南北通透",
     tags: ["平台核验", "近地铁", "双卧室"],
-    image: "./assets/rent-living.jpg",
+    image: "./assets/rent-two-bedroom.jpg",
     reason: "适合两人合租或需要独立书房",
   },
   {
@@ -310,7 +315,7 @@ const kaRentHomes = [
     price: 4380,
     orientation: "带阳台",
     tags: ["经纪人房源", "空间更大", "民水民电"],
-    image: "./assets/rent-studio.jpg",
+    image: "./assets/rent-kitchen.jpg",
     reason: "同预算获得更大的居住空间",
   },
   {
@@ -325,7 +330,7 @@ const kaRentHomes = [
     price: 5200,
     orientation: "挑高复式",
     tags: ["毕业生友好", "公寓", "近地铁", "随时看房"],
-    image: "./assets/rent-studio.jpg",
+    image: "./assets/rent-loft.jpg",
     reason: "通勤距离短，适合偏好公寓居住体验",
   },
   {
@@ -355,7 +360,7 @@ const kaRentHomes = [
     price: 5050,
     orientation: "朝南",
     tags: ["个人房源", "无中介费", "可养宠"],
-    image: "./assets/rent-bedroom.jpg",
+    image: "./assets/rent-living.jpg",
     reason: "个人房源费用更轻，但需确认真实状态",
   },
   {
@@ -383,7 +388,12 @@ function App() {
   const [consent, setConsent] = useState(false);
   const [journey, setJourney] = useState(["了解需求"]);
   const [communityContext, setCommunityContext] = useState("");
+  const [demoMode, setDemoMode] = useState(false);
+  const [demoRunning, setDemoRunning] = useState("");
   const scrollRef = useRef(null);
+  const logoTapRef = useRef(0);
+  const logoTapTimerRef = useRef(null);
+  const demoTimersRef = useRef([]);
 
   useEffect(() => {
     if (!scrollRef.current) return;
@@ -412,7 +422,7 @@ function App() {
       setMessages((prev) => [...prev, { role: "agent", id, query: text, communityName: resolvedCommunity }]);
       setLoading(false);
       setJourney((prev) => (prev.includes("获得分析") ? prev : [...prev, "获得分析"]));
-    }, 900);
+    }, 1250);
   };
 
   const openService = (type) => {
@@ -428,11 +438,47 @@ function App() {
     setCommunityContext("");
   };
 
+  const stopDemo = () => {
+    demoTimersRef.current.forEach((timer) => window.clearTimeout(timer));
+    demoTimersRef.current = [];
+    setDemoRunning("");
+  };
+
+  const runDemo = (scriptId) => {
+    stopDemo();
+    const script = demoScripts[scriptId];
+    setConsent(true);
+    resetConversation();
+    setDemoRunning(scriptId);
+    demoTimersRef.current = [
+      window.setTimeout(() => ask(script.query, script.intent), 450),
+      ...(script.service ? [window.setTimeout(() => openService(script.service), 2800)] : []),
+      window.setTimeout(() => setDemoRunning(""), script.service ? 3600 : 2600),
+    ];
+  };
+
+  const handleLogoTap = () => {
+    logoTapRef.current += 1;
+    window.clearTimeout(logoTapTimerRef.current);
+    if (logoTapRef.current >= 5) {
+      logoTapRef.current = 0;
+      stopDemo();
+      setDemoMode((current) => !current);
+      return;
+    }
+    logoTapTimerRef.current = window.setTimeout(() => { logoTapRef.current = 0; }, 1800);
+  };
+
+  useEffect(() => () => {
+    window.clearTimeout(logoTapTimerRef.current);
+    demoTimersRef.current.forEach((timer) => window.clearTimeout(timer));
+  }, []);
+
   return (
     <div className="app-shell">
       <DesktopNav onService={openService} onReset={resetConversation} />
       <main className="agent-column">
-        <Header onService={openService} onReset={resetConversation} showBack={messages.length > 0} />
+        <Header onService={openService} onReset={resetConversation} onLogoTap={handleLogoTap} showBack={messages.length > 0} />
         <section className="chat-scroll" ref={scrollRef}>
           {messages.length === 0 ? (
             <Welcome onAsk={ask} onService={openService} />
@@ -457,6 +503,7 @@ function App() {
       </main>
       <JourneyPanel journey={journey} onService={openService} onReset={resetConversation} />
       <BottomNav drawer={drawer} onService={openService} onReset={resetConversation} />
+      {demoMode && <DemoController running={demoRunning} onRun={runDemo} onStop={stopDemo} onClose={() => { stopDemo(); setDemoMode(false); }} />}
       {!consent && <Consent onAccept={() => setConsent(true)} />}
       {drawer && <ServiceDrawer type={drawer} onClose={() => setDrawer(null)} onNavigate={setDrawer} />}
     </div>
@@ -477,12 +524,12 @@ function DesktopNav({ onService, onReset }) {
   );
 }
 
-function Header({ onService, onReset, showBack }) {
+function Header({ onService, onReset, onLogoTap, showBack }) {
   return (
     <header className="app-header">
       {showBack && <button className="icon-button mobile-back" aria-label="返回" onClick={onReset}><ArrowLeft size={20} /></button>}
       <div className="header-title">
-        <div className="agent-logo"><Home size={17} /></div>
+        <button className="agent-logo logo-trigger" aria-label="房多多 Agent" onClick={onLogoTap}><Home size={17} /></button>
         <div><strong>房多多 Agent</strong><span>杭州 · 模拟数据演示</span></div>
       </div>
       <div className="header-actions">
@@ -543,22 +590,34 @@ function UserMessage({ text }) {
 
 function LoadingAnswer() {
   const [stage, setStage] = useState(0);
-  const stages = ["识别问题意图", "调用模拟 MCP 数据", "完成内容风控与回答组装"];
+  const stages = ["意图识别", "数据 / 服务 MCP", "支付宝内容风控", "多模态回答组装"];
 
   useEffect(() => {
-    const timer = window.setInterval(() => setStage((current) => Math.min(current + 1, stages.length - 1)), 280);
+    const timer = window.setInterval(() => setStage((current) => Math.min(current + 1, stages.length - 1)), 260);
     return () => window.clearInterval(timer);
   }, []);
 
   return (
     <div className="answer-row">
       <AgentMark />
-      <div className="thinking pipeline-thinking">
-        <div className="dots"><i /><i /><i /></div>
-        <span>{stages[stage]}</span>
-        <small>{stage + 1}/{stages.length}</small>
+      <div className="mcp-pipeline">
+        <div className="mcp-pipeline-head"><span><Sparkles size={13} />正在生成可信回答</span><small>{stage + 1}/{stages.length}</small></div>
+        <div className="mcp-pipeline-flow">
+          {stages.map((label, index) => <div className={index < stage ? "done" : index === stage ? "active" : ""} key={label}><i>{index < stage ? <Check size={10} /> : index + 1}</i><span>{label}</span></div>)}
+        </div>
       </div>
     </div>
+  );
+}
+
+function DemoController({ running, onRun, onStop, onClose }) {
+  return (
+    <aside className="demo-controller">
+      <div><span><Sparkles size={14} />演示模式</span><small>{running ? `正在自动播放：${demoScripts[running].label}` : "选择故事线自动播放"}</small></div>
+      <nav>{Object.entries(demoScripts).map(([id, script]) => <button className={running === id ? "active" : ""} disabled={Boolean(running)} key={id} onClick={() => onRun(id)}>{script.label}</button>)}</nav>
+      {running && <button className="demo-stop" onClick={onStop}>停止</button>}
+      <button className="demo-close" aria-label="关闭演示模式" onClick={onClose}><X size={14} /></button>
+    </aside>
   );
 }
 

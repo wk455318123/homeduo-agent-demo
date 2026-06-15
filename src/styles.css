@@ -89,6 +89,7 @@ body { margin: 0; min-width: 320px; min-height: 100vh; overflow: hidden; }
   box-shadow: 0 5px 12px rgba(22, 119, 255, .18);
 }
 .agent-logo { width: 34px; height: 34px; border-radius: 10px; }
+.logo-trigger { padding: 0; }
 .agent-mark { width: 27px; height: 27px; border-radius: 8px; margin-top: 2px; }
 .header-actions { margin-left: auto; display: flex; align-items: center; gap: 7px; }
 .city-pill { height: 33px; background: #f0f5fb; border-radius: 6px; padding: 0 9px; display: flex; gap: 4px; align-items: center; color: #46546a; font-size: 12px; }
@@ -160,6 +161,20 @@ body { margin: 0; min-width: 320px; min-height: 100vh; overflow: hidden; }
 .thinking { display: flex; align-items: center; gap: 9px; height: 48px; padding: 0 13px; border: 1px solid #e6ebf2; background: #fff; border-radius: 3px 10px 10px 10px; color: #798599; font-size: 11px; }
 .pipeline-thinking span { color: #4f5f75; }
 .pipeline-thinking small { margin-left: auto; color: #1677ff; font-size: 9px; font-weight: 700; }
+.mcp-pipeline { border: 1px solid #dfe7f1; border-radius: 3px 10px 10px 10px; background: #fff; padding: 10px; }
+.mcp-pipeline-head { display: flex; align-items: center; margin-bottom: 9px; }
+.mcp-pipeline-head span { color: #405069; display: flex; align-items: center; gap: 4px; font-size: 9px; font-weight: 700; }
+.mcp-pipeline-head span svg { color: #1677ff; }
+.mcp-pipeline-head small { margin-left: auto; color: #1677ff; font-size: 8px; font-weight: 700; }
+.mcp-pipeline-flow { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
+.mcp-pipeline-flow > div { min-width: 0; min-height: 43px; border-radius: 5px; background: #f4f6f9; color: #98a2b1; padding: 5px 3px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; text-align: center; }
+.mcp-pipeline-flow i { width: 16px; height: 16px; border-radius: 50%; background: #e4e9ef; display: grid; place-items: center; font-size: 7px; font-style: normal; }
+.mcp-pipeline-flow span { font-size: 7px; line-height: 1.25; }
+.mcp-pipeline-flow > div.active { background: #edf5ff; color: #1677ff; box-shadow: inset 0 0 0 1px #b9d6ff; }
+.mcp-pipeline-flow > div.active i { background: #1677ff; color: #fff; animation: pipeline-pulse 1s infinite; }
+.mcp-pipeline-flow > div.done { background: #eef8f3; color: #287956; }
+.mcp-pipeline-flow > div.done i { background: #36a875; color: #fff; }
+@keyframes pipeline-pulse { 50% { box-shadow: 0 0 0 4px rgba(22,119,255,.12); } }
 .dots { display: flex; gap: 3px; }
 .dots i { width: 4px; height: 4px; border-radius: 50%; background: #1677ff; animation: bounce 1s infinite ease-in-out; }
 .dots i:nth-child(2) { animation-delay: .15s; }
@@ -408,6 +423,16 @@ body { margin: 0; min-width: 320px; min-height: 100vh; overflow: hidden; }
 .side-tip strong { font-size: 9px; }
 .side-tip span { color: #7b899c; font-size: 8px; line-height: 1.55; }
 .bottom-nav { display: none; }
+.demo-controller { position: fixed; z-index: 18; left: 50%; bottom: 72px; width: min(calc(100% - 20px), 410px); transform: translateX(-50%); border: 1px solid #bdd7fb; border-radius: 9px; background: rgba(255,255,255,.98); padding: 8px 34px 8px 9px; box-shadow: 0 10px 28px rgba(35,61,95,.18); display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: 7px; }
+.demo-controller > div { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.demo-controller > div span { color: #1677ff; display: flex; align-items: center; gap: 3px; font-size: 9px; font-weight: 700; }
+.demo-controller > div small { color: #8290a3; font-size: 7px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.demo-controller nav { display: flex; gap: 4px; }
+.demo-controller nav button, .demo-stop { min-height: 27px; border-radius: 5px; background: #f0f4f9; color: #617086; padding: 0 6px; font-size: 7px; white-space: nowrap; }
+.demo-controller nav button.active { background: #1677ff; color: #fff; }
+.demo-controller nav button:disabled:not(.active) { opacity: .45; cursor: not-allowed; }
+.demo-stop { color: #1677ff; background: #edf5ff; }
+.demo-close { position: absolute; right: 6px; top: 6px; width: 24px; height: 24px; border-radius: 50%; background: transparent; color: #8c98aa; display: grid; place-items: center; }
 
 .modal-backdrop, .drawer-backdrop {
   position: fixed;
