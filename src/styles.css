@@ -423,14 +423,16 @@ body { margin: 0; min-width: 320px; min-height: 100vh; overflow: hidden; }
 .side-tip strong { font-size: 9px; }
 .side-tip span { color: #7b899c; font-size: 8px; line-height: 1.55; }
 .bottom-nav { display: none; }
-.demo-controller { position: fixed; z-index: 18; left: 50%; bottom: 72px; width: min(calc(100% - 20px), 410px); transform: translateX(-50%); border: 1px solid #bdd7fb; border-radius: 9px; background: rgba(255,255,255,.98); padding: 8px 34px 8px 9px; box-shadow: 0 10px 28px rgba(35,61,95,.18); display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: 7px; }
+.demo-controller { position: fixed; z-index: 18; left: 50%; bottom: 72px; width: min(calc(100% - 20px), 410px); transform: translateX(-50%); border: 1px solid #bdd7fb; border-radius: 9px; background: rgba(255,255,255,.98); padding: 8px 34px 8px 9px; box-shadow: 0 10px 28px rgba(35,61,95,.18); display: grid; grid-template-columns: 1fr auto auto auto; align-items: center; gap: 5px; }
 .demo-controller > div { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
 .demo-controller > div span { color: #1677ff; display: flex; align-items: center; gap: 3px; font-size: 9px; font-weight: 700; }
 .demo-controller > div small { color: #8290a3; font-size: 7px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .demo-controller nav { display: flex; gap: 4px; }
-.demo-controller nav button, .demo-stop { min-height: 27px; border-radius: 5px; background: #f0f4f9; color: #617086; padding: 0 6px; font-size: 7px; white-space: nowrap; }
+.demo-controller nav button, .demo-stop, .demo-all { min-height: 27px; border-radius: 5px; background: #f0f4f9; color: #617086; padding: 0 6px; font-size: 7px; white-space: nowrap; }
 .demo-controller nav button.active { background: #1677ff; color: #fff; }
-.demo-controller nav button:disabled:not(.active) { opacity: .45; cursor: not-allowed; }
+.demo-controller button:disabled:not(.active) { opacity: .45; cursor: not-allowed; }
+.demo-all { color: #1677ff; background: #edf5ff; }
+.demo-all.active { background: #1677ff; color: #fff; }
 .demo-stop { color: #1677ff; background: #edf5ff; }
 .demo-close { position: absolute; right: 6px; top: 6px; width: 24px; height: 24px; border-radius: 50%; background: transparent; color: #8c98aa; display: grid; place-items: center; }
 

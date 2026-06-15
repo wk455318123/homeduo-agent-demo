@@ -2,6 +2,8 @@ import assert from "node:assert/strict";
 import { extractCommunityName, identifyPrompt } from "../src/intent.js";
 import { matchAffordableProjects } from "../src/policyMatching.js";
 import { resolveCommunityContext } from "../src/conversationContext.js";
+import { demoScripts, demoSequence } from "../src/demoConfig.js";
+import { kaRentHomes } from "../src/mockData.js";
 import { matchesRentPrice } from "../src/rentalFilters.js";
 
 const cases = [
@@ -67,5 +69,9 @@ assert.equal(matchesRentPrice("4,000元内", 5200), false);
 assert.equal(matchesRentPrice("4,000-5,000元", 4680), true);
 assert.equal(matchesRentPrice("4,000-5,000元", 5200), false);
 assert.equal(matchesRentPrice("5,000元以上", 5200), true);
+assert.equal(new Set(kaRentHomes.map((home) => home.id)).size, kaRentHomes.length, "租房房源 id 不应重复");
+assert.equal(new Set(kaRentHomes.map((home) => home.image)).size, kaRentHomes.length, "租房卡片图片不应重复");
+assert.deepEqual(demoSequence, ["graduate", "community", "policy"]);
+assert.ok(demoSequence.every((id) => demoScripts[id]), "连播故事线必须存在对应脚本");
 
-console.log(`Intent regression tests passed: ${cases.length} queries + 3 policy matching + 2 context + 5 rental price cases`);
+console.log(`Regression tests passed: ${cases.length} queries + policy/context + rental filters + demo configuration`);

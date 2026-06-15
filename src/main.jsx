@@ -64,7 +64,19 @@ import {
 import { extractCommunityName, identifyPrompt } from "./intent.js";
 import { matchAffordableProjects } from "./policyMatching.js";
 import { resolveCommunityContext } from "./conversationContext.js";
+import { demoScripts, demoSequence } from "./demoConfig.js";
 import { matchesRentPrice } from "./rentalFilters.js";
+import {
+  affordableProjects,
+  communityData,
+  communityHomes,
+  communityRentData,
+  compareData,
+  kaRentHomes,
+  listings,
+  rentData,
+  trendData,
+} from "./mockData.js";
 import "./styles.css";
 
 const BLUE = "#1677ff";
@@ -76,61 +88,6 @@ const DATA_UPDATED_DATE = new Intl.DateTimeFormat("zh-CN", {
   day: "2-digit",
 }).format(new Date()).replaceAll("/", ".");
 const DATA_UPDATED_SHORT = `${new Date().getMonth() + 1}月${new Date().getDate()}日`;
-const relativeDeadline = (days, action) => `${days} 天后${action}`;
-const demoScripts = {
-  graduate: { label: "毕业生安居", query: "应届毕业生在杭州租房怎么更省？", intent: "graduate-rent", service: "graduate-rent-center" },
-  community: { label: "小区行情", query: "万科城市花园二手房价和租金怎么样？", intent: "community" },
-  policy: { label: "政策住房", query: "我能申请杭州保租房或人才房吗？", intent: "affordable", service: "affordable-projects" },
-};
-
-const trendData = [
-  { month: "7月", price: 26890 },
-  { month: "8月", price: 26720 },
-  { month: "9月", price: 26780 },
-  { month: "10月", price: 26490 },
-  { month: "11月", price: 26540 },
-  { month: "12月", price: 26210 },
-  { month: "1月", price: 26320 },
-  { month: "2月", price: 26040 },
-  { month: "3月", price: 26110 },
-  { month: "4月", price: 25870 },
-  { month: "5月", price: 25960 },
-  { month: "6月", price: 25765 },
-];
-
-const compareData = [
-  { month: "1月", 余杭: 32800, 萧山: 30200 },
-  { month: "2月", 余杭: 32500, 萧山: 30300 },
-  { month: "3月", 余杭: 32650, 萧山: 29950 },
-  { month: "4月", 余杭: 32050, 萧山: 30100 },
-  { month: "5月", 余杭: 32120, 萧山: 29550 },
-  { month: "6月", 余杭: 31600, 萧山: 29300 },
-];
-
-const rentData = [
-  { name: "未来科技城", rent: 4800 },
-  { name: "仓前", rent: 4200 },
-  { name: "闲林", rent: 3600 },
-  { name: "五常", rent: 4550 },
-];
-
-const communityData = [
-  { month: "1月", price: 35400, deal: 9 },
-  { month: "2月", price: 35100, deal: 6 },
-  { month: "3月", price: 34900, deal: 11 },
-  { month: "4月", price: 35050, deal: 8 },
-  { month: "5月", price: 34700, deal: 12 },
-  { month: "6月", price: 34500, deal: 7 },
-];
-
-const communityRentData = [
-  { month: "1月", rent: 5150 },
-  { month: "2月", rent: 5100 },
-  { month: "3月", rent: 5200 },
-  { month: "4月", rent: 5250 },
-  { month: "5月", rent: 5200 },
-  { month: "6月", rent: 5300 },
-];
 
 const prompts = [
   { id: "trend", label: "杭州最近房价什么走势？", sub: "查看城市价格趋势与市场变化", icon: TrendingDown },
@@ -167,218 +124,6 @@ const directFollowupServices = {
   "查询杭州入学政策": "school-policy",
   "查看周边在售房源": "buy-listings",
 };
-
-const affordableProjects = [
-  {
-    name: "潮语贤庭",
-    type: "人才专项租赁住房",
-    area: "上城区",
-    rent: "人才优惠租金最高可至评估价 7 折",
-    layout: "两室一厅 · 约 57-59㎡",
-    status: "关注后续配租公告",
-    stage: "即将开放",
-    deadline: relativeDeadline(14, "开放"),
-    updated: "今天 09:30",
-    sourceLevel: "市级官方平台",
-    fit: "高校毕业生 / 各类人才",
-    source: "杭州市住房租赁公众服务平台",
-    operator: "项目运营方以最新公告为准",
-  },
-  {
-    name: "宸寓·如栖兰庭",
-    type: "人才专项租赁住房",
-    area: "拱墅区",
-    rent: "项目实行一房一价",
-    layout: "精装房源 · 拎包入住",
-    status: "常态化配租信息待核验",
-    stage: "常态化登记",
-    deadline: "登记后等待房源通知",
-    updated: "昨天 16:20",
-    sourceLevel: "区级运营公告",
-    fit: "在杭就业人才",
-    source: "杭州市住房租赁公众服务平台",
-    operator: "运营品牌：宸寓",
-  },
-  {
-    name: "宁巢·钱塘蓝领公寓",
-    type: "蓝领公寓",
-    area: "钱塘区",
-    rent: "床位约 150 元/月起",
-    layout: "单人间 / 双人间 / 四人间",
-    status: "适合新就业群体关注",
-    stage: "开放申请中",
-    deadline: relativeDeadline(6, "截止"),
-    updated: "今天 08:15",
-    sourceLevel: "区级官方平台",
-    fit: "产业工人 / 新就业群体",
-    source: "杭州市住房租赁公众服务平台",
-    operator: "运营品牌：宁巢",
-  },
-];
-
-const listings = {
-  buy: [
-    { title: "未来科技城 · 三房", meta: "89㎡ · 近地铁 · 次新房", price: "298万", tag: "预算内" },
-    { title: "良渚文化村 · 三房", meta: "96㎡ · 精装修 · 南北通透", price: "285万", tag: "自住优选" },
-    { title: "闲林 · 四房", meta: "118㎡ · 低密社区 · 有车位", price: "305万", tag: "空间更大" },
-  ],
-  rent: [
-    { title: "西溪北苑 · 平台整租", meta: "整租一居 · 42㎡ · 良睦路地铁站", price: "4,680元/月", tag: "花呗免押" },
-    { title: "欧美金融城 · 精装一居", meta: "整租一居 · 46㎡ · 海创园通勤约15分钟", price: "4,980元/月", tag: "今日可看" },
-    { title: "仓前 · 品质主卧", meta: "品质合租 · 独立卫浴 · 可月付", price: "3,280元/月", tag: "可月付" },
-  ],
-};
-
-const communityHomes = {
-  sale: [
-    { title: "万科城市花园 · 89㎡三房", meta: "中层 · 南北通透 · 满五年", price: "306万", unit: "34,382元/㎡", tag: "近参考价", image: "./assets/rent-living.jpg" },
-    { title: "万科城市花园 · 108㎡三房", meta: "高层 · 精装修 · 带车位", price: "386万", unit: "35,741元/㎡", tag: "改善户型", image: "./assets/rent-bedroom.jpg" },
-    { title: "万科城市花园 · 72㎡两房", meta: "中层 · 朝南 · 近地铁", price: "242万", unit: "33,611元/㎡", tag: "总价较低", image: "./assets/rent-studio.jpg" },
-  ],
-  rent: [
-    { title: "万科城市花园 · 整租两房", meta: "72㎡ · 朝南 · 押一付三", price: "5,300元/月", unit: "可随时看房", tag: "主流租金", image: "./assets/rent-living.jpg" },
-    { title: "万科城市花园 · 整租三房", meta: "89㎡ · 精装修 · 可月付", price: "6,800元/月", unit: "支持花呗免押", tag: "家庭整租", image: "./assets/rent-bedroom.jpg" },
-    { title: "万科城市花园 · 品质合租", meta: "主卧 · 独立卫浴 · 包保洁", price: "3,180元/月", unit: "合作平台模拟房源", tag: "预算更轻", image: "./assets/rent-studio.jpg" },
-  ],
-};
-
-const kaRentHomes = [
-  {
-    id: "xixi-north",
-    partner: "自如",
-    title: "自如整租 · 西溪北苑",
-    location: "未来科技城",
-    commute: "海创园通勤约 18 分钟",
-    subway: "5号线良睦路站 780m",
-    layout: "整租一居",
-    area: "42㎡",
-    price: 4680,
-    orientation: "朝南",
-    tags: ["毕业生友好", "花呗免押", "可月付", "今日可看"],
-    image: "./assets/rent-studio-bright.jpg",
-    reason: "通勤、预算与独居需求最均衡",
-  },
-  {
-    id: "efc",
-    partner: "贝壳租房",
-    title: "欧美金融城 · 精装一居",
-    location: "未来科技城",
-    commute: "步行至海创园约 15 分钟",
-    subway: "5号线创景路站 560m",
-    layout: "整租一居",
-    area: "46㎡",
-    price: 4980,
-    orientation: "朝南",
-    tags: ["毕业生友好", "平台核验", "近地铁", "VR看房"],
-    image: "./assets/rent-living-balcony.jpg",
-    reason: "距离公司近，房源信息已由平台核验",
-  },
-  {
-    id: "cangqian",
-    partner: "58同城",
-    title: "仓前 · 房东直租主卧",
-    location: "仓前",
-    commute: "海创园通勤约 25 分钟",
-    subway: "5号线葛巷站 920m",
-    layout: "品质合租",
-    area: "主卧 18㎡",
-    price: 3280,
-    orientation: "带独立卫浴",
-    tags: ["个人房源", "独立卫浴", "可月付"],
-    image: "./assets/rent-bedroom-green.jpg",
-    reason: "预算更轻，个人房源需进一步核验",
-  },
-  {
-    id: "wuchang-two",
-    partner: "安居客",
-    title: "五常华元 · 南北两居",
-    location: "西溪/五常",
-    commute: "海创园通勤约 28 分钟",
-    subway: "5号线五常站 650m",
-    layout: "整租两居",
-    area: "68㎡",
-    price: 5480,
-    orientation: "南北通透",
-    tags: ["平台核验", "近地铁", "双卧室"],
-    image: "./assets/rent-two-bedroom.jpg",
-    reason: "适合两人合租或需要独立书房",
-  },
-  {
-    id: "xianlin-two",
-    partner: "我爱我家",
-    title: "闲林山水 · 大两居",
-    location: "仓前",
-    commute: "海创园通勤约 35 分钟",
-    subway: "公交接驳至地铁站",
-    layout: "整租两居",
-    area: "72㎡",
-    price: 4380,
-    orientation: "带阳台",
-    tags: ["经纪人房源", "空间更大", "民水民电"],
-    image: "./assets/rent-kitchen.jpg",
-    reason: "同预算获得更大的居住空间",
-  },
-  {
-    id: "efc-loft",
-    partner: "安居客",
-    title: "欧美金融城 · 复式公寓",
-    location: "未来科技城",
-    commute: "海创园通勤约 12 分钟",
-    subway: "5号线创景路站 430m",
-    layout: "整租一居",
-    area: "52㎡",
-    price: 5200,
-    orientation: "挑高复式",
-    tags: ["毕业生友好", "公寓", "近地铁", "随时看房"],
-    image: "./assets/rent-loft.jpg",
-    reason: "通勤距离短，适合偏好公寓居住体验",
-  },
-  {
-    id: "liangmu-room",
-    partner: "贝壳租房",
-    title: "良睦路地铁口 · 品质主卧",
-    location: "未来科技城",
-    commute: "海创园通勤约 20 分钟",
-    subway: "5号线良睦路站 260m",
-    layout: "品质合租",
-    area: "主卧 20㎡",
-    price: 3480,
-    orientation: "朝南带阳台",
-    tags: ["平台核验", "近地铁", "可月付"],
-    image: "./assets/rent-bedroom.jpg",
-    reason: "地铁通勤稳定，合租房间面积较大",
-  },
-  {
-    id: "xixi-owner",
-    partner: "58同城",
-    title: "西溪北苑 · 房东直租两居",
-    location: "西溪/五常",
-    commute: "海创园通勤约 30 分钟",
-    subway: "5号线五常站 980m",
-    layout: "整租两居",
-    area: "70㎡",
-    price: 5050,
-    orientation: "朝南",
-    tags: ["个人房源", "无中介费", "可养宠"],
-    image: "./assets/rent-living.jpg",
-    reason: "个人房源费用更轻，但需确认真实状态",
-  },
-  {
-    id: "cangqian-one",
-    partner: "我爱我家",
-    title: "仓前梦想小镇 · 精装一居",
-    location: "仓前",
-    commute: "海创园通勤约 22 分钟",
-    subway: "5号线葛巷站 730m",
-    layout: "整租一居",
-    area: "45㎡",
-    price: 4250,
-    orientation: "朝东",
-    tags: ["经纪人房源", "精装修", "拎包入住"],
-    image: "./assets/rent-studio.jpg",
-    reason: "预算适中，通勤和独居体验较均衡",
-  },
-];
 
 function App() {
   const [messages, setMessages] = useState([]);
@@ -457,6 +202,23 @@ function App() {
     ];
   };
 
+  const runDemoSequence = () => {
+    stopDemo();
+    setConsent(true);
+    setDemoRunning("all");
+    const segmentDuration = 3800;
+    const timers = [];
+    demoSequence.forEach((scriptId, index) => {
+      const script = demoScripts[scriptId];
+      const start = index * segmentDuration;
+      timers.push(window.setTimeout(resetConversation, start));
+      timers.push(window.setTimeout(() => ask(script.query, script.intent), start + 400));
+      if (script.service) timers.push(window.setTimeout(() => openService(script.service), start + 2450));
+    });
+    timers.push(window.setTimeout(() => setDemoRunning(""), demoSequence.length * segmentDuration));
+    demoTimersRef.current = timers;
+  };
+
   const handleLogoTap = () => {
     logoTapRef.current += 1;
     window.clearTimeout(logoTapTimerRef.current);
@@ -503,7 +265,7 @@ function App() {
       </main>
       <JourneyPanel journey={journey} onService={openService} onReset={resetConversation} />
       <BottomNav drawer={drawer} onService={openService} onReset={resetConversation} />
-      {demoMode && <DemoController running={demoRunning} onRun={runDemo} onStop={stopDemo} onClose={() => { stopDemo(); setDemoMode(false); }} />}
+      {demoMode && <DemoController running={demoRunning} onRun={runDemo} onRunAll={runDemoSequence} onStop={stopDemo} onClose={() => { stopDemo(); setDemoMode(false); }} />}
       {!consent && <Consent onAccept={() => setConsent(true)} />}
       {drawer && <ServiceDrawer type={drawer} onClose={() => setDrawer(null)} onNavigate={setDrawer} />}
     </div>
@@ -610,11 +372,12 @@ function LoadingAnswer() {
   );
 }
 
-function DemoController({ running, onRun, onStop, onClose }) {
+function DemoController({ running, onRun, onRunAll, onStop, onClose }) {
   return (
     <aside className="demo-controller">
-      <div><span><Sparkles size={14} />演示模式</span><small>{running ? `正在自动播放：${demoScripts[running].label}` : "选择故事线自动播放"}</small></div>
+      <div><span><Sparkles size={14} />演示模式</span><small>{running ? `正在自动播放：${running === "all" ? "完整故事线" : demoScripts[running].label}` : "选择故事线自动播放"}</small></div>
       <nav>{Object.entries(demoScripts).map(([id, script]) => <button className={running === id ? "active" : ""} disabled={Boolean(running)} key={id} onClick={() => onRun(id)}>{script.label}</button>)}</nav>
+      <button className={running === "all" ? "demo-all active" : "demo-all"} disabled={Boolean(running)} onClick={onRunAll}>连播全部</button>
       {running && <button className="demo-stop" onClick={onStop}>停止</button>}
       <button className="demo-close" aria-label="关闭演示模式" onClick={onClose}><X size={14} /></button>
     </aside>
