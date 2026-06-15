@@ -55,6 +55,7 @@ import { extractCommunityName, identifyPrompt } from "./intent.js";
 import { matchAffordableProjects } from "./policyMatching.js";
 import { resolveCommunityContext } from "./conversationContext.js";
 import { demoScripts, demoSequence } from "./demoConfig.js";
+import { recommendRentalHomes } from "./rentalFilters.js";
 import { BottomNav } from "./components/BottomNav.jsx";
 import { Fund, GenericService, GraduateRentCenter, HousingHub, Mortgage } from "./components/CommonServiceViews.jsx";
 import { PolicyAlerts, PolicyApplication, PolicyProgress, PolicyProjectDetail, PolicyProjects } from "./components/PolicyServiceViews.jsx";
@@ -254,7 +255,7 @@ function App() {
             </div>
           )}
         </section>
-        <Composer value={input} setValue={setInput} onSend={() => ask(input)} onService={openService} />
+        <Composer value={input} setValue={setInput} onSend={() => ask(input)} onService={openService} disabled={loading} />
       </main>
       <JourneyPanel journey={journey} onService={openService} onReset={resetConversation} />
       <BottomNav drawer={drawer} onService={openService} onReset={resetConversation} />
@@ -626,16 +627,7 @@ function RentalMatchFlow({ onService }) {
   const step = !location ? 1 : !budget ? 2 : !layout ? 3 : 4;
   const recommended = useMemo(() => {
     if (step < 4) return [];
-    return [...kaRentHomes]
-      .map((home) => ({
-        ...home,
-        score:
-          (home.location === location ? 4 : 0) +
-          (home.price <= budget ? 3 : Math.max(0, 2 - Math.ceil((home.price - budget) / 500))) +
-          (home.layout === layout ? 4 : 0),
-      }))
-      .sort((a, b) => b.score - a.score || a.price - b.price)
-      .slice(0, 3);
+    return recommendRentalHomes(kaRentHomes, { location, budget, layout });
   }, [location, budget, layout, step]);
 
   const reset = () => {
@@ -1067,14 +1059,15 @@ function SourceNote() {
   return <div className="source-note"><span>数据支持：趋势动物 · 模拟 MCP 返回</span><span>以上数据反映历史趋势，不代表未来走势，不构成投资建议。</span></div>;
 }
 
-function Composer({ value, setValue, onSend, onService }) {
+function Composer({ value, setValue, onSend, onService, disabled }) {
+  const canSend = value.trim().length > 0 && !disabled;
   return (
     <div className="composer-wrap">
       <div className="composer">
         <button className="icon-button" aria-label="添加" onClick={() => onService("attachments")}><Plus size={20} /></button>
-        <input value={value} onChange={(e) => setValue(e.target.value)} onKeyDown={(e) => e.key === "Enter" && onSend()} placeholder="问问杭州房价、租房或公积金…" />
+        <input value={value} onChange={(e) => setValue(e.target.value)} onKeyDown={(e) => e.key === "Enter" && canSend && onSend()} placeholder="问问杭州房价、租房或公积金…" />
         <button className="icon-button" aria-label="语音" onClick={() => onService("voice")}><Mic size={20} /></button>
-        <button className="send-button" onClick={onSend} aria-label="发送"><Send size={17} /></button>
+        <button className="send-button" disabled={!canSend} onClick={onSend} aria-label="发送"><Send size={17} /></button>
       </div>
       <span className="composer-note">AI回答仅供参考，重要信息请以官方渠道为准</span>
     </div>
@@ -1283,4 +1276,7 @@ function RentDetail({ home }) {
   );
 }
 
-createRoot(document.getElementById("root")).render(<App />);
+const rootElement = document.getElementById("root");
+const root = window.__homeduoRoot || createRoot(rootElement);
+window.__homeduoRoot = root;
+root.render(<App />);

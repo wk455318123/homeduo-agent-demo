@@ -5,3 +5,14 @@ export function matchesRentPrice(priceFilter, monthlyPrice) {
   if (priceFilter === "5,000元以上") return monthlyPrice > 5000;
   return false;
 }
+
+export function recommendRentalHomes(homes, { location, budget, layout }, limit = 3) {
+  return homes
+    .filter((home) => home.price <= budget)
+    .map((home) => ({
+      ...home,
+      score: (home.location === location ? 4 : 0) + (home.layout === layout ? 4 : 0),
+    }))
+    .sort((a, b) => b.score - a.score || a.price - b.price)
+    .slice(0, limit);
+}

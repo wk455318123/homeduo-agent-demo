@@ -401,6 +401,7 @@ body { margin: 0; min-width: 320px; min-height: 100vh; overflow: hidden; }
 .composer input { min-width: 0; flex: 1; border: 0; outline: 0; background: transparent; padding: 0 4px; font-size: 12px; color: #26344b; }
 .composer input::placeholder { color: #a0a9b7; }
 .send-button { width: 32px; height: 32px; border-radius: 6px; display: grid; place-items: center; color: #fff; background: #1677ff; }
+.send-button:disabled { background: #cbd5e1; color: #fff; cursor: not-allowed; }
 .composer-note { display: block; text-align: center; color: #a1a9b5; font-size: 8px; margin-top: 5px; }
 
 .journey-panel { background: #fbfcfe; padding: 19px 16px; overflow-y: auto; }

@@ -4,7 +4,7 @@ import { matchAffordableProjects } from "../src/policyMatching.js";
 import { resolveCommunityContext } from "../src/conversationContext.js";
 import { demoScripts, demoSequence } from "../src/demoConfig.js";
 import { kaRentHomes } from "../src/mockData.js";
-import { matchesRentPrice } from "../src/rentalFilters.js";
+import { matchesRentPrice, recommendRentalHomes } from "../src/rentalFilters.js";
 
 const cases = [
   ["万科城市花园租金怎么样", "community", "万科城市花园"],
@@ -69,6 +69,13 @@ assert.equal(matchesRentPrice("4,000元内", 5200), false);
 assert.equal(matchesRentPrice("4,000-5,000元", 4680), true);
 assert.equal(matchesRentPrice("4,000-5,000元", 5200), false);
 assert.equal(matchesRentPrice("5,000元以上", 5200), true);
+const strictBudgetRecommendations = recommendRentalHomes(kaRentHomes, {
+  location: "未来科技城",
+  budget: 4500,
+  layout: "整租一居",
+});
+assert.ok(strictBudgetRecommendations.length > 0, "租房匹配应返回预算内备选房源");
+assert.ok(strictBudgetRecommendations.every((home) => home.price <= 4500), "租房匹配不应推荐超过预算的房源");
 assert.equal(new Set(kaRentHomes.map((home) => home.id)).size, kaRentHomes.length, "租房房源 id 不应重复");
 assert.equal(new Set(kaRentHomes.map((home) => home.image)).size, kaRentHomes.length, "租房卡片图片不应重复");
 assert.deepEqual(demoSequence, ["graduate", "community", "policy"]);
