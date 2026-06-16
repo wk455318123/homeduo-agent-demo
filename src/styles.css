@@ -489,7 +489,7 @@ body { margin: 0; min-width: 320px; min-height: 100vh; overflow: hidden; }
 .filter-row button { height: 29px; border-radius: 5px; background: #f1f5f9; padding: 0 9px; color: #657287; font-size: 9px; display: flex; align-items: center; gap: 3px; }
 .listing-list { display: flex; flex-direction: column; gap: 7px; margin-bottom: 14px; }
 .listing-item { background: #fff; border: 1px solid #e5eaf1; border-radius: 7px; padding: 7px; display: grid; grid-template-columns: 62px 1fr auto; gap: 9px; align-items: center; text-align: left; }
-.listing-image { width: 62px; height: 55px; border-radius: 5px; display: grid; place-items: center; color: rgba(255,255,255,.9); }
+.listing-image { width: 62px; height: 55px; border-radius: 5px; display: grid; place-items: center; color: rgba(255,255,255,.9); background-size: cover; background-position: center; }
 .image-1 { background: linear-gradient(145deg, #5a9a8b, #c3d8ca); }
 .image-2 { background: linear-gradient(145deg, #6e88b0, #bdcde2); }
 .image-3 { background: linear-gradient(145deg, #8d7f9d, #d4c7d4); }

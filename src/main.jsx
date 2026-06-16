@@ -1185,7 +1185,7 @@ function Listings({ kind, onNavigate }) {
       <div className="drawer-title"><span>{kind === "buy" ? "预算内在售房源" : "未来科技城周边租房"}</span><small>聚合展示 · 模拟房源</small></div>
       <div className="filter-row"><button onClick={() => setFeedback("区域筛选已展开（Demo）")}>区域<ChevronDown size={13} /></button><button onClick={() => setFeedback("总价筛选已展开（Demo）")}>总价<ChevronDown size={13} /></button><button onClick={() => setFeedback("户型筛选已展开（Demo）")}>户型<ChevronDown size={13} /></button><button aria-label="更多筛选" onClick={() => setFeedback("更多筛选条件已展开（Demo）")}><SlidersHorizontal size={15} /></button></div>
       <div className="listing-list">
-        {items.map((item, index) => <button className="listing-item" key={item.title} onClick={() => setSelectedBuy(item)}><span className={`listing-image image-${index + 1}`}><Home size={25} /></span><span className="listing-content"><strong>{item.title}</strong><small>{item.meta}</small><em>{item.tag}</em></span><b>{item.price}</b></button>)}
+        {items.map((item, index) => <button className="listing-item" key={item.title} onClick={() => setSelectedBuy(item)}><span className={`listing-image image-${index + 1}`} style={item.image ? { backgroundImage: `url(${item.image})` } : undefined}>{!item.image && <Home size={25} />}</span><span className="listing-content"><strong>{item.title}</strong><small>{item.meta}</small><em>{item.tag}</em></span><b>{item.price}</b></button>)}
       </div>
       <button className="primary-wide" onClick={() => setFeedback("将进入合作房源服务查看实时在售状态（Demo）")}>进入房源服务查看更多<ArrowRight size={17} /></button>
       {feedback && <ActionFeedback text={feedback} />}

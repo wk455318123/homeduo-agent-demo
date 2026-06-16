@@ -3,7 +3,7 @@ import { extractCommunityName, identifyPrompt } from "../src/intent.js";
 import { matchAffordableProjects } from "../src/policyMatching.js";
 import { resolveCommunityContext } from "../src/conversationContext.js";
 import { demoScripts, demoSequence } from "../src/demoConfig.js";
-import { kaRentHomes } from "../src/mockData.js";
+import { kaRentHomes, listings } from "../src/mockData.js";
 import { matchesRentPrice, recommendRentalHomes } from "../src/rentalFilters.js";
 
 const cases = [
@@ -76,6 +76,7 @@ const strictBudgetRecommendations = recommendRentalHomes(kaRentHomes, {
 });
 assert.ok(strictBudgetRecommendations.length > 0, "租房匹配应返回预算内备选房源");
 assert.ok(strictBudgetRecommendations.every((home) => home.price <= 4500), "租房匹配不应推荐超过预算的房源");
+assert.ok(listings.buy.every((home) => home.image), "二手房源必须配置详情图片");
 assert.equal(new Set(kaRentHomes.map((home) => home.id)).size, kaRentHomes.length, "租房房源 id 不应重复");
 assert.equal(new Set(kaRentHomes.map((home) => home.image)).size, kaRentHomes.length, "租房卡片图片不应重复");
 assert.deepEqual(demoSequence, ["graduate", "community", "policy"]);
