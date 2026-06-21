@@ -6,6 +6,10 @@
 
 [打开房多多 Agent Demo](https://wk455318123.github.io/homeduo-agent-demo/)
 
+## 汇报材料
+
+- [支付宝房产机会汇报（新房补充版）](https://wk455318123.github.io/homeduo-agent-demo/reports/alipay-housing-newhouse/)
+
 ## 演示场景
 
 - 杭州城市房价趋势

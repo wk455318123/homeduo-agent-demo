@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>支付宝房产服务接入阿宝 - 机会判断与起步建议</title>
+<style>
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+  color: #111827;
+  background: #f6f8fb;
+  line-height: 1.62;
+}
+a { color: #1677ff; text-decoration: none; }
+.page { max-width: 1180px; margin: 0 auto; padding: 32px 28px 56px; }
+.hero {
+  background: #fff;
+  border-top: 6px solid #1677ff;
+  padding: 34px 36px 30px;
+  box-shadow: 0 8px 28px rgba(17, 24, 39, 0.06);
+}
+.eyebrow { color: #1677ff; font-size: 13px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+h1 { margin: 8px 0 12px; font-size: 34px; line-height: 1.22; letter-spacing: 0; }
+.hero p { margin: 0; max-width: 920px; color: #4b5563; font-size: 16px; }
+.meta { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 22px; }
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: #eef6ff;
+  color: #0b5ed7;
+  font-size: 12px;
+  font-weight: 700;
+}
+.summary {
+  display: grid;
+  grid-template-columns: 1.05fr .95fr;
+  gap: 18px;
+  margin-top: 18px;
+}
+.panel {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  padding: 22px 24px;
+}
+.panel.blue { border-color: #b9dcff; background: linear-gradient(180deg, #f5faff 0%, #fff 72%); }
+.panel.warn { border-color: #ffd8a8; background: #fffaf3; }
+.section {
+  margin-top: 18px;
+  padding: 28px 30px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+}
+.section h2 {
+  margin: 0 0 18px;
+  padding-left: 12px;
+  border-left: 4px solid #1677ff;
+  font-size: 22px;
+  line-height: 1.35;
+}
+.section h3 { margin: 18px 0 10px; font-size: 16px; }
+.lead { margin: 0 0 16px; color: #374151; }
+.one-line {
+  margin: 0 0 14px;
+  padding: 12px 14px;
+  background: #eef6ff;
+  border-left: 4px solid #1677ff;
+  color: #123b69;
+  font-weight: 700;
+}
+.grid-4 {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+.metric {
+  min-height: 114px;
+  padding: 16px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+}
+.metric .num { font-size: 25px; line-height: 1.2; font-weight: 800; color: #1677ff; }
+.metric .label { margin-top: 7px; font-size: 13px; color: #4b5563; }
+.metric .note { margin-top: 7px; font-size: 12px; color: #6b7280; }
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 14px 0;
+  font-size: 14px;
+}
+th {
+  text-align: left;
+  color: #0b5ed7;
+  background: #eef6ff;
+  border-bottom: 1px solid #b9dcff;
+  padding: 11px 12px;
+  font-weight: 800;
+}
+td {
+  vertical-align: top;
+  padding: 11px 12px;
+  border-bottom: 1px solid #edf0f5;
+}
+tr:last-child td { border-bottom: 0; }
+.tag {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.p0 { background: #fff1f0; color: #cf1322; }
+.p1 { background: #fff7e6; color: #d46b08; }
+.p2 { background: #f3f4f6; color: #4b5563; }
+.ok { background: #f0fdf4; color: #15803d; }
+.weak { background: #fff7e6; color: #d46b08; }
+.none { background: #fff1f0; color: #cf1322; }
+.list { margin: 0; padding-left: 18px; }
+.list li { margin: 6px 0; }
+.cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+.visual-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  align-items: start;
+}
+.compare-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  align-items: start;
+}
+.shot-card {
+  margin: 0;
+  padding: 14px;
+  border: 1px solid #e5e7eb;
+  background: #f9fafb;
+}
+.shot-frame {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  min-height: 420px;
+  padding: 10px;
+  background: #eef2f7;
+}
+.shot-frame img {
+  width: 100%;
+  max-width: 260px;
+  max-height: 560px;
+  object-fit: contain;
+  border-radius: 6px;
+  box-shadow: 0 10px 28px rgba(17, 24, 39, .14);
+}
+.shot-card figcaption {
+  margin-top: 12px;
+  color: #4b5563;
+  font-size: 13px;
+}
+.shot-card strong {
+  display: block;
+  margin-bottom: 4px;
+  color: #111827;
+  font-size: 15px;
+}
+.demo-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+.demo-grid .shot-frame { min-height: 360px; }
+.demo-grid .shot-frame img { max-width: 220px; max-height: 500px; }
+.compare-grid .shot-frame img { max-width: 270px; max-height: 620px; }
+.service {
+  padding: 16px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+}
+.service h3 { margin: 0 0 8px; color: #111827; }
+.service p { margin: 0; color: #4b5563; font-size: 13px; }
+.service .cmd {
+  display: inline-block;
+  margin-top: 12px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  color: #0b5ed7;
+  background: #eef6ff;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 12px;
+}
+.roadmap {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+.step {
+  position: relative;
+  padding: 16px;
+  background: #fff;
+  border: 1px solid #dbeafe;
+}
+.step .time { color: #1677ff; font-weight: 800; font-size: 13px; }
+.step h3 { margin: 8px 0 6px; }
+.step p { margin: 0; color: #4b5563; font-size: 13px; }
+.framework {
+  display: grid;
+  gap: 10px;
+}
+.layer {
+  display: grid;
+  grid-template-columns: 130px 1fr;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid #e5e7eb;
+  background: #f9fafb;
+}
+.layer strong { color: #0b5ed7; }
+.callout {
+  margin-top: 14px;
+  padding: 16px 18px;
+  border: 1px solid #ffd8a8;
+  background: #fffaf3;
+}
+.decision {
+  background: #102a43;
+  color: #fff;
+  border: 0;
+}
+.decision h2 { border-left-color: #47a3ff; color: #fff; }
+.decision table th { background: rgba(255,255,255,.12); color: #fff; border-bottom-color: rgba(255,255,255,.22); }
+.decision table td { border-bottom-color: rgba(255,255,255,.14); color: #e5edf7; }
+.footnote { margin-top: 16px; color: #6b7280; font-size: 12px; }
+.print-hint { display: none; }
+@media (max-width: 920px) {
+  .summary, .grid-4, .cards, .visual-grid, .compare-grid, .demo-grid, .roadmap { grid-template-columns: 1fr; }
+  .layer { grid-template-columns: 1fr; }
+  h1 { font-size: 28px; }
+  .page { padding: 20px 14px 40px; }
+  .hero, .section { padding: 24px 18px; }
+}
+@media print {
+  body { background: #fff; }
+  .page { max-width: none; padding: 0; }
+  .hero, .section, .panel { box-shadow: none; break-inside: avoid; }
+  .section { page-break-inside: avoid; }
+  a { color: #111827; }
+}
+</style>
+</head>
+<body>
+<main class="page">
+  <section class="hero">
+    <div class="eyebrow">支付宝 AI 版 / 阿宝 / 房产服务机会</div>
+    <h1>房产服务接入阿宝：切口起步，逐步建设阵地</h1>
+    <p>核心判断：房产需求足够大，但支付宝当前房源、楼盘、房价、小区内容基础薄弱，不适合一上来做“大而全找房平台”。更现实的打法，是趁 AI 版把供给服务 MCP / CLI 化的窗口，先用支付宝已有的政务、信用、支付、电子签、公积金能力，围绕保租房、公租房、租房签约、买房资金测算、房价问答等切口做服务基建。</p>
+    <div class="meta">
+      <span class="pill">版本：支付宝汇报版</span>
+      <span class="pill">日期：2026-06-21</span>
+      <span class="pill">目标：给老板看判断和决策点</span>
+      <span class="pill">原则：少口号，讲缺口，讲起步路径</span>
+    </div>
+  </section>
+
+  <section class="summary">
+    <div class="panel blue">
+      <h2 style="margin:0 0 12px;padding:0;border:0;font-size:20px;">一句话结论</h2>
+      <p class="one-line">建议立项做“支付宝房产服务 Agent”试点，但定位不是立刻做贝壳/安居客，而是先做支付宝能办成事、能承接搜索高意图的房产服务入口。</p>
+      <ul class="list">
+        <li><strong>市场成立：</strong>买房、租房、住房服务是大民生需求，低频但高决策、高焦虑、高客单。</li>
+        <li><strong>短板明确：</strong>支付宝缺自有房源、楼盘库、房价库、经纪人和内容社区，直接做信息平台风险高。</li>
+        <li><strong>优势清晰：</strong>实名、信用、支付/托管、电子签、公积金、政务入口，是房产交易与租住服务的后半程优势。</li>
+        <li><strong>打法建议：</strong>P0 先跑保租/公租申请助手、租房合同/免押/付租、买房资金测算，同时把“小区/楼盘搜索结果卡”作为流量试点；P1 再接房价问答、法拍房、新房数据。</li>
+      </ul>
+    </div>
+    <div class="panel warn">
+      <h2 style="margin:0 0 12px;padding:0;border:0;font-size:20px;">试点定位</h2>
+      <ul class="list">
+        <li><strong>不是做内容平台：</strong>不以资讯、攻略、社区为主，避免和贝壳/安居客正面拼前半程供给。</li>
+        <li><strong>不是做投资顾问：</strong>房价和小区趋势只做历史信息解释，不预测涨跌，不给买卖建议。</li>
+        <li><strong>优先做办事闭环：</strong>从保租/公租、资金测算、合同签约、付租提醒等支付宝能承接的服务开始。</li>
+        <li><strong>先验证再扩张：</strong>6 周内看真实 query、搜索结果卡点击、服务卡点击、试算/申请/签约完成、成本和风险投诉。</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>1. 产品形态参考：阿宝入口 + 两个 Agent 原型</h2>
+    <p class="lead">AI 版会把服务前置到对话入口。房产方向可以延续阿宝的轻交互形态：用户先问一句，再由 Agent 返回结果、依据和下一步服务卡。</p>
+    <div class="visual-grid">
+      <figure class="shot-card">
+        <div class="shot-frame"><img src="assets/abao-home.png" alt="阿宝入口截图"></div>
+        <figcaption>
+          <strong>阿宝入口</strong>
+          支付宝 AI 版以自然语言承接任务，适合承载“查政策、算资金、找服务”的高意图问题。
+        </figcaption>
+      </figure>
+      <figure class="shot-card">
+        <div class="shot-frame"><img src="assets/school-agent.png" alt="杭州学区问答 Agent 截图"></div>
+        <figcaption>
+          <strong>学区问答 Agent</strong>
+          已验证“输入小区/对象 - 返回结构化结果 - 展示依据来源 - 复制要点”的信息服务范式。
+        </figcaption>
+      </figure>
+      <figure class="shot-card">
+        <div class="shot-frame"><img src="assets/homeduo-agent.png" alt="房产问答 Agent 截图"></div>
+        <figcaption>
+          <strong>房产问答 Agent</strong>
+          已有首页、推荐问题、常用服务和输入框雏形，可扩展为房产服务 Agent 的试点入口。
+        </figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>2. 市场判断：不是高增长故事，是大需求和强痛点故事</h2>
+    <p class="lead">房产市场不宜包装成“高速增长赛道”。更稳妥的表达是：交易规模仍大，租住人群持续存在，用户决策链长且信息不对称，AI 入口有机会承接大量“问、算、办”的高意图需求。</p>
+    <div class="grid-4">
+      <div class="metric">
+        <div class="num">8.81亿㎡</div>
+        <div class="label">2025 年全国新建商品房销售面积</div>
+        <div class="note">国家统计局口径，同比下降 8.7%</div>
+      </div>
+      <div class="metric">
+        <div class="num">8.39万亿</div>
+        <div class="label">2025 年全国新建商品房销售额</div>
+        <div class="note">国家统计局口径，同比下降 12.6%</div>
+      </div>
+      <div class="metric">
+        <div class="num">650万套/间</div>
+        <div class="label">“十四五”40 个重点城市保租房计划</div>
+        <div class="note">政策性住房供给持续扩容</div>
+      </div>
+      <div class="metric">
+        <div class="num">近4000万</div>
+        <div class="label">四大一线城市租房人口规模</div>
+        <div class="note">长租蓝皮书口径，说明租住需求厚</div>
+      </div>
+    </div>
+    <div class="callout">
+      <strong>关键判断：</strong>房相关服务需求长期存在，主要集中在查政策、算贷款、查公积金、找保租房/公租房、签合同、付租、办备案、查小区、看趋势、做风险核验等任务。
+    </div>
+    <p class="footnote">数据来源：<a href="https://www.stats.gov.cn/sj/zxfb/202601/t20260119_1962324.html">国家统计局《2025年全国房地产市场基本情况》</a>；<a href="https://www.scio.gov.cn/xwfb/gwyxwbgsxwfbh/wqfbh_2284/2022n_2285/2022n02y24r/xgbdbj_2453/202208/t20220808_316405.html">国新办/住建部保障性租赁住房公开信息</a>；<a href="https://www.news.cn/fortune/20250402/0b8ee258ce9f4eff9bdbf32463f0d51f/c.html">新华社转引《2025中国城市长租市场发展蓝皮书》</a>。</p>
+  </section>
+
+  <section class="section">
+    <h2>3. 现状诊断：我们缺的是前半程供给，强在后半程服务</h2>
+    <p class="one-line">支付宝当前不具备直接做“全量找房平台”的基础，但具备做“可信办事与交易服务入口”的基础。</p>
+    <table>
+      <thead>
+        <tr>
+          <th>能力</th>
+          <th>当前判断</th>
+          <th>直接风险</th>
+          <th>补齐路径</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>新房楼盘/二手小区/房价数据</td>
+          <td><span class="tag none">薄弱或没有</span></td>
+          <td>无法回答“哪里买、值不值、多少钱”这类核心问题</td>
+          <td>先外接数据方做问答试点，再沉淀城市、板块、小区、口径和质量评估</td>
+        </tr>
+        <tr>
+          <td>租房房源供给</td>
+          <td><span class="tag weak">可谈但未验证</span></td>
+          <td>房源去重、实时性、真实性、服务商责任边界不清</td>
+          <td>先拿保租房、公寓、机构房源做小规模城市试点，验证可用量和转化</td>
+        </tr>
+        <tr>
+          <td>政务/公积金/市民中心</td>
+          <td><span class="tag ok">有入口优势</span></td>
+          <td>城市差异大，不能由模型直接代办</td>
+          <td>做政策问答、材料清单、资格自测、官方服务跳转和进度提醒</td>
+        </tr>
+        <tr>
+          <td>支付、信用、电子签、资金托管</td>
+          <td><span class="tag ok">强差异化</span></td>
+          <td>涉及交易和合规，需服务商准入与售后</td>
+          <td>用于租房免押、合同签署、租金支付、交易保证金等后半程服务</td>
+        </tr>
+        <tr>
+          <td>内容社区/经纪人体系</td>
+          <td><span class="tag none">基本没有</span></td>
+          <td>无法靠内容和顾问长期留住用户</td>
+          <td>初期不碰重社区，先用任务型服务沉淀用户意图和对象资产</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="section">
+    <h2>4. 起步策略：用支付宝优势选切口，不从最重的房源平台开始</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>优先级</th>
+          <th>切口</th>
+          <th>为什么适合支付宝</th>
+          <th>最小可上线形态</th>
+          <th>验证指标</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="tag p0">P0</span></td>
+          <td>保租房/公租房申请助手</td>
+          <td>用户需求明确，政务属性强，和市民中心、实名、免填有协同</td>
+          <td>政策问答、资格自测、材料清单、城市入口聚合、申请提醒</td>
+          <td>资格自测完成率、官方入口点击率、材料清单收藏/提醒</td>
+        </tr>
+        <tr>
+          <td><span class="tag p0">P0</span></td>
+          <td>租房合同、免押、付租</td>
+          <td>支付宝在信用、电子签、支付、提醒上有明显后半程优势</td>
+          <td>合同模板生成、电子签入口、免押规则说明、租金提醒和支付</td>
+          <td>合同发起率、签约完成率、付租绑定率、投诉率</td>
+        </tr>
+        <tr>
+          <td><span class="tag p0">P0</span></td>
+          <td>买房资金测算</td>
+          <td>房贷计算器、公积金查询、金融服务和用户授权天然在支付宝内</td>
+          <td>公积金查询跳转、首付/月供/组合贷试算、预算安全垫提示</td>
+          <td>试算完成率、公积金入口点击、预算筛选后服务点击</td>
+        </tr>
+        <tr>
+          <td><span class="tag p0">P0</span></td>
+          <td>支付宝搜索小区/楼盘信息卡</td>
+          <td>用户直接搜“小区、楼盘、板块、房价、学区”时意图很强，当前搜索容易把商品/生活服务排前，房产结果卡可以低成本接住流量</td>
+          <td>小区/楼盘对象识别、信息摘要、成交/学区/通勤/附近新房服务卡、问阿宝入口；数据未接入时明确标“示意/口径”</td>
+          <td>房产 query 命中量、信息卡曝光点击率、追问率、服务卡点击、误触/投诉率</td>
+        </tr>
+        <tr>
+          <td><span class="tag p1">P1</span></td>
+          <td>房价/小区趋势问答</td>
+          <td>AI 适配度高，但数据口径和合规边界要非常严</td>
+          <td>外接数据方 MCP，回答趋势、口径、图表和风险提示，不做涨跌预测</td>
+          <td>问答完成率、追问率、服务卡点击、风险拦截率、调用成本</td>
+        </tr>
+        <tr>
+          <td><span class="tag p1">P1</span></td>
+          <td>法拍房信息服务</td>
+          <td>司法拍卖、保证金、资金安全、风险核验和支付宝能力有连接点</td>
+          <td>法拍信息聚合、风险清单、保证金/资金流程说明、提醒订阅</td>
+          <td>订阅率、保证金链路点击、风险说明阅读完成率</td>
+        </tr>
+        <tr>
+          <td><span class="tag p2">P2</span></td>
+          <td>新房/租房全量找房</td>
+          <td>需求最大，但也是最重，需要供给、服务商、履约和风控体系</td>
+          <td>先做重点城市、重点供给类型，不承诺全国覆盖</td>
+          <td>有效房源数、去重率、更新时效、看房预约和履约指标</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="section">
+    <h2>5. 阿宝形态：把房产能力做成可调用服务，不只是问答内容</h2>
+    <p class="lead">AI 版的机会不在“多一个聊天入口”，而在用户问完后能继续完成下一步服务。MCP / CLI 化时，每个能力都要有明确输入、输出、授权、降级和合规边界。</p>
+    <div class="cards">
+      <div class="service">
+        <h3>政策与资格</h3>
+        <p>回答公租房、保租房、限购、社保、人才资格等问题，输出材料清单和官方入口。</p>
+        <span class="cmd">housing_policy.lookup</span>
+      </div>
+      <div class="service">
+        <h3>资金测算</h3>
+        <p>基于用户输入和授权跳转，完成公积金查询、组合贷、首付、月供和现金压力试算。</p>
+        <span class="cmd">mortgage_budget.calculate</span>
+      </div>
+      <div class="service">
+        <h3>租住交易</h3>
+        <p>承接合同生成、电子签、免押规则、付租提醒、备案入口和入住后缴费服务。</p>
+        <span class="cmd">rental_contract.start</span>
+      </div>
+      <div class="service">
+        <h3>趋势问答</h3>
+        <p>外接房价/小区数据方，仅输出历史趋势、口径、来源和风险提示，不给投资承诺。</p>
+        <span class="cmd">price_trend.answer</span>
+      </div>
+      <div class="service">
+        <h3>小区对象卡</h3>
+        <p>识别搜索 query 中的小区、楼盘、板块，返回位置、成交、学区、通勤、物业和下一步服务。</p>
+        <span class="cmd">community_card.render</span>
+      </div>
+      <div class="service">
+        <h3>新房楼盘评测</h3>
+        <p>学习小鸡选房式能力，把楼栋、户型、日照、噪声、遮挡和一房一价做成可解释评分。</p>
+        <span class="cmd">new_house.evaluate</span>
+      </div>
+      <div class="service">
+        <h3>法拍风险</h3>
+        <p>聚合法拍信息，提示腾退、税费、限购、保证金、过户等风险点和办理路径。</p>
+        <span class="cmd">auction_house.screen</span>
+      </div>
+      <div class="service">
+        <h3>服务编排</h3>
+        <p>由阿宝判断用户意图，返回回答 + 服务卡 + 官方/持牌渠道跳转，不代替用户确认。</p>
+        <span class="cmd">housing_agent.route</span>
+      </div>
+    </div>
+    <div class="callout">
+      <strong>合规边界：</strong>不说“一定涨/抄底/稳赚”；不承诺贷款额度、购房资格、房源真实性；敏感操作必须用户授权并跳转官方或持牌渠道；外部服务超时要明确说明失败环节，不能伪造完成状态。
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>6. 新房补充：从“小区/楼盘对象”切入，而不是从全量找房切入</h2>
+    <p class="lead">结合新房产品 review，最值得学习的不是“房源越多越好”，而是小鸡选房这类工具抓住了用户在新房决策里的真实难点：同一个楼盘里到底选哪栋、哪层、哪户，日照、噪声、遮挡、学区、通勤和总价差怎么取舍。支付宝不一定先做重平台，可以先把小区/楼盘识别成可服务的“对象资产”。</p>
+    <div class="cards">
+      <div class="service">
+        <h3>搜索即入口</h3>
+        <p>用户在支付宝直接搜“小区名、楼盘名、板块名”时，先给小区/楼盘信息卡，而不是让商品、外卖、生活服务抢占首屏。</p>
+      </div>
+      <div class="service">
+        <h3>问答即分发</h3>
+        <p>信息卡下挂“成交怎么样、学区怎么查、附近新房怎么比、我的预算能买几房”等追问，把泛搜索导入阿宝。</p>
+      </div>
+      <div class="service">
+        <h3>新房做深，不做全</h3>
+        <p>先在杭州、上海、深圳等高关注城市做楼栋/户型/一房一价/认购资格工具，验证高意图 query 和服务点击。</p>
+      </div>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>用户问法/搜法</th>
+          <th>可返回的房产结果</th>
+          <th>支付宝可承接的下一步</th>
+          <th>边界</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>搜“山水人家”</td>
+          <td>小区卡：位置、成交摘要、挂牌区间、学区/通勤、附近新房、常见追问</td>
+          <td>问阿宝查小区、资金测算、公积金查询、订阅成交/上新提醒</td>
+          <td>成交/学区必须标来源和日期，不做投资涨跌判断</td>
+        </tr>
+        <tr>
+          <td>问“这个新盘怎么选楼栋”</td>
+          <td>楼栋评分：日照、噪声、遮挡、景观、梯户比、总价差、一房一价排序</td>
+          <td>上传楼盘表、保存选房清单、认购材料提醒、预算测算</td>
+          <td>不替用户做购买建议，只解释指标和风险</td>
+        </tr>
+        <tr>
+          <td>问“附近有没有更合适的新房”</td>
+          <td>同板块新房/次新二手对比：总价、面积段、通勤、交付时间、认购门槛</td>
+          <td>楼盘关注、开盘/登记提醒、房贷试算、咨询持牌服务方</td>
+          <td>房源真实性和可售状态需数据方/官方口径兜底</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="callout">
+      <strong>关键机会：</strong>“搜小区”是一个比“打开房产频道”更自然的流量入口。它不要求用户先理解支付宝有房产服务，只要搜索意图命中小区/楼盘，就能把首屏从弱相关商品结果切到小区信息、阿宝问答和可办服务。
+    </div>
+    <h3>支付宝搜索小区：当前结果 vs 期望结果</h3>
+    <div class="compare-grid">
+      <figure class="shot-card">
+        <div class="shot-frame"><img src="assets/demo-alipay-current-search.png" alt="支付宝搜索山水人家当前效果截图"></div>
+        <figcaption>
+          <strong>当前效果</strong>
+          搜“山水人家”首屏优先出现淘宝闪购、视频等结果，用户的小区/房产意图没有被优先识别。
+        </figcaption>
+      </figure>
+      <figure class="shot-card">
+        <div class="shot-frame"><img src="assets/demo-alipay-xiaoqu-target.png" alt="支付宝搜索小区信息卡期望效果示意"></div>
+        <figcaption>
+          <strong>期望效果示意</strong>
+          当 query 命中小区/楼盘意图时，首屏置顶“小区信息卡 + 阿宝追问 + 房产服务”，商品/生活服务结果下沉。图中数据为演示口径。
+        </figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>7. Demo 示例：更多房相关问题可由 Agent 分工承接</h2>
+    <p class="lead">房产问答 Agent 承接房价、租房、区域行情、新房楼栋、买房预算、置换、公租/保租等问题；学区问答 Agent 承接小区对应学校。后续接入阿宝时，可由意图识别自动路由到对应 MCP / CLI 能力。</p>
+    <div class="demo-grid">
+      <figure class="shot-card">
+        <div class="shot-frame"><img src="assets/demo-homeduo-xiaoqu-price.png" alt="小区房价问答 Demo"></div>
+        <figcaption>
+          <strong>问某小区房价</strong>
+          示例问题：山水人家最近房价怎么样？当前未接入结构化小区数据时，明确说明边界，并引导查看房源。
+        </figcaption>
+      </figure>
+      <figure class="shot-card">
+        <div class="shot-frame"><img src="assets/demo-school-xiaoqu.png" alt="小区学区问答 Demo"></div>
+        <figcaption>
+          <strong>问某小区对应学区</strong>
+          示例对象：山水人家。返回幼儿园、小学、初中对应结果，并提示最终以招生公告为准。
+        </figcaption>
+      </figure>
+      <figure class="shot-card">
+        <div class="shot-frame"><img src="assets/demo-homeduo-rent.png" alt="租房信息问答 Demo"></div>
+        <figcaption>
+          <strong>问租房信息</strong>
+          示例问题：在杭州西湖区租房，5000 以内有什么选择？返回租房筛选步骤和支付宝可承接服务。
+        </figcaption>
+      </figure>
+      <figure class="shot-card">
+        <div class="shot-frame"><img src="assets/demo-homeduo-xihu-price.png" alt="区域房价问答 Demo"></div>
+        <figcaption>
+          <strong>问区域房价情况</strong>
+          示例问题：杭州市西湖区房价情况怎么样？当前无趋势数据时说明边界，并推荐房源和购房能力测算。
+        </figcaption>
+      </figure>
+      <figure class="shot-card">
+        <div class="shot-frame"><img src="assets/demo-qa-newhouse-select.png" alt="新房楼栋楼层选择问答 Demo"></div>
+        <figcaption>
+          <strong>问新房楼栋/楼层</strong>
+          示例问题：杭州这个新盘我摇中了，12 幢和 15 幢怎么选？返回日照、噪声、遮挡、总价差等可解释指标。
+        </figcaption>
+      </figure>
+      <figure class="shot-card">
+        <div class="shot-frame"><img src="assets/demo-qa-buy-budget.png" alt="买房资金测算问答 Demo"></div>
+        <figcaption>
+          <strong>问买房资金测算</strong>
+          示例问题：首付 180 万、家庭月入 3.5 万，预算怎么定？把公积金、月供、现金安全垫接到支付宝能力。
+        </figcaption>
+      </figure>
+      <figure class="shot-card">
+        <div class="shot-frame"><img src="assets/demo-qa-old-new-swap.png" alt="以旧换新置换问答 Demo"></div>
+        <figcaption>
+          <strong>问以旧换新/置换</strong>
+          示例问题：卖旧买新怎么避免链路断点？返回估值、锁房、退定、托管和节点提醒。
+        </figcaption>
+      </figure>
+      <figure class="shot-card">
+        <div class="shot-frame"><img src="assets/demo-qa-public-rental.png" alt="保租房公租房申请问答 Demo"></div>
+        <figcaption>
+          <strong>问保租房/公租房</strong>
+          示例问题：我能不能申请保租房？返回资格自测、材料清单、官方入口和进度提醒。
+        </figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>8. 未来阵地：房相关服务的“大而全”，要从“可办成事”长出来</h2>
+    <p class="lead">终局可以是类似市民中心、出行一样的房产综合阵地，但建设顺序应从服务闭环出发，而不是先铺一个空的信息货架。</p>
+    <div class="framework">
+      <div class="layer">
+        <strong>入口层</strong>
+        <div>阿宝对话、支付宝搜索、市民中心、生活频道、首页服务卡、消息提醒。</div>
+      </div>
+      <div class="layer">
+        <strong>场景层</strong>
+        <div>租房：找房、保租/公租、免押、合同、备案、付租、入住；买房：政策、趋势、资金、房源、贷款、过户；住房：物业、水电燃、维修、搬家保洁；资产：法拍、估值、以旧换新。</div>
+      </div>
+      <div class="layer">
+        <strong>能力层</strong>
+        <div>政策规则库、房价/小区数据、供给聚合、服务商准入、合同模板、资金工具、用户授权、服务状态回传。</div>
+      </div>
+      <div class="layer">
+        <strong>基础层</strong>
+        <div>实名认证、芝麻信用、支付/托管、电子签、公积金、政务办事、风控合规、客服售后、日志审计。</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section decision">
+    <h2>9. 希望老板拍板的 4 件事</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>事项</th>
+          <th>建议</th>
+          <th>需要资源</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>是否进入阿宝首批房产服务试点</td>
+          <td>建议进入，但以服务闭环试点而非大而全房产平台立项</td>
+          <td>AI 版入口资源、产品/技术排期、埋点支持</td>
+        </tr>
+        <tr>
+          <td>P0 切口选择</td>
+          <td>保租/公租申请助手、买房资金测算、租房合同/付租、小区/楼盘搜索信息卡四线并进</td>
+          <td>市民中心、公积金、电子签、支付、信用能力 Owner，以及搜索/阿宝入口资源对齐</td>
+        </tr>
+        <tr>
+          <td>外部数据合作</td>
+          <td>房价/小区/新房楼盘趋势仅做小流量 MCP 试点，先验证搜索命中、问答需求和服务点击</td>
+          <td>商务、法务、数据安全、SLA、版权和口径协议</td>
+        </tr>
+        <tr>
+          <td>试点验收标准</td>
+          <td>不看 DAU 虚高，重点看 query 量、服务卡点击、办理/签约/试算完成、成本和风险投诉</td>
+          <td>6 周灰度周期、试点预算、城市样本和数据看板</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+</main>
+</body>
+</html>
